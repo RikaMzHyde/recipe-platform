@@ -1,0 +1,76 @@
+"use client"
+
+import { useState } from "react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Search, X } from "lucide-react"
+import { legacyCategories } from "@/lib/recipes"
+
+interface RecipeSearchProps {
+  onSearch: (query: string, category: string, ingredient: string) => void
+}
+
+export function RecipeSearch({ onSearch }: RecipeSearchProps) {
+  const [query, setQuery] = useState("")
+  const [category, setCategory] = useState("")
+  const [ingredient, setIngredient] = useState("")
+
+  const handleSearch = () => {
+    onSearch(query, category, ingredient)
+  }
+
+  const handleClear = () => {
+    setQuery("")
+    setCategory("")
+    setIngredient("")
+    onSearch("", "", "")
+  }
+
+  const hasFilters = query || category || ingredient
+
+  return (
+    <div className="w-full space-y-4">
+      <div className="flex flex-col md:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            placeholder="Buscar recetas por nombre..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            className="pl-10 h-12 rounded-full"
+          />
+        </div>
+        <Select value={category} onValueChange={setCategory}>
+          <SelectTrigger className="w-full md:w-48 h-12 rounded-full">
+            <SelectValue placeholder="Categoría" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas</SelectItem>
+            {legacyCategories.map((cat) => (
+              <SelectItem key={cat} value={cat}>
+                {cat}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Input
+          placeholder="Ingrediente..."
+          value={ingredient}
+          onChange={(e) => setIngredient(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+          className="w-full md:w-48 h-12 rounded-full"
+        />
+        <Button onClick={handleSearch} size="lg" className="rounded-full h-12 px-8">
+          Buscar
+        </Button>
+        {hasFilters && (
+          <Button onClick={handleClear} variant="outline" size="lg" className="rounded-full h-12 px-6 bg-transparent">
+            <X className="h-5 w-5" />
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
