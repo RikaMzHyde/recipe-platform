@@ -6,32 +6,34 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent } from "@/components/ui/card"
-import { Plus, X, Upload, ImageIcon } from "lucide-react"
-import { createRecipeWithImage, fetchCategories, type Category, type Ingredient } from "@/lib/recipes"
+import { Plus, X, ImageIcon } from "lucide-react"
+import { fetchCategories, type Category, type Ingredient, type Recipe } from "@/lib/recipes"
 
-interface CreateRecipeFormProps {
+interface EditRecipeFormProps {
+  recipe: Recipe
   userId: string
   onSuccess: () => void
   isSubmitting: boolean
   setIsSubmitting: (value: boolean) => void
 }
 
-export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitting }: CreateRecipeFormProps) {
+export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsSubmitting }: EditRecipeFormProps) {
   const [categories, setCategories] = useState<Category[]>([])
   const [imageFile, setImageFile] = useState<File | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [ingredients, setIngredients] = useState<Ingredient[]>([{ name: "", amount: "" }])
+  const [previewUrl, setPreviewUrl] = useState<string | null>(recipe.imageUrl)
+  const [ingredients, setIngredients] = useState<Ingredient[]>(
+    recipe.ingredients && recipe.ingredients.length > 0 ? recipe.ingredients : [{ name: "", amount: "" }]
+  )
   const [error, setError] = useState<string | null>(null)
 
-  // Form fields
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [categoryId, setCategoryId] = useState<string>("")
-  const [prepTime, setPrepTime] = useState("")
-  const [cookTime, setCookTime] = useState("")
-  const [servings, setServings] = useState("")
-  const [difficulty, setDifficulty] = useState<string>("")
+  // Form fields inicializados con los datos de la receta
+  const [title, setTitle] = useState(recipe.title)
+  const [description, setDescription] = useState(recipe.description || "")
+  const [categoryId, setCategoryId] = useState<string>(recipe.categoryId?.toString() || "")
+  const [prepTime, setPrepTime] = useState(recipe.prepTime || "")
+  const [cookTime, setCookTime] = useState(recipe.cookTime || "")
+  const [servings, setServings] = useState(recipe.servings?.toString() || "")
+  const [difficulty, setDifficulty] = useState<string>(recipe.difficulty || "")
 
   useEffect(() => {
     loadCategories()
@@ -96,38 +98,52 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
         throw new Error("El título es obligatorio")
       }
 
-      const formData = new FormData()
+      let imageUrl = recipe.imageUrl
 
-      // Agregar userId (obligatorio)
-      formData.append("userId", userId)
-
-      // Agregar campos básicos
-      formData.append("title", title.trim())
-      if (description.trim()) formData.append("description", description.trim())
-      if (categoryId) formData.append("categoryId", categoryId)
-      if (prepTime.trim()) formData.append("prepTime", prepTime.trim())
-      if (cookTime.trim()) formData.append("cookTime", cookTime.trim())
-      if (servings) formData.append("servings", servings)
-      if (difficulty) formData.append("difficulty", difficulty)
-
-      // Agregar ingredientes (solo los que tengan nombre y cantidad)
-      const validIngredients = ingredients.filter((ing) => ing.name.trim() && ing.amount.trim())
-      if (validIngredients.length > 0) {
-        formData.append("ingredients", JSON.stringify(validIngredients))
-      }
-
-      // Agregar imagen si existe
+      // Si hay una nueva imagen, subirla primero
       if (imageFile) {
-        formData.append("image", imageFile)
+        const uploadFormData = new FormData()
+        uploadFormData.append("image", imageFile)
+
+        const uploadResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: uploadFormData,
+        })
+
+        if (!uploadResponse.ok) throw new Error("Error al subir la imagen")
+        const uploadData = await uploadResponse.json()
+        imageUrl = uploadData.url
       }
 
-      // Enviar al backend
-      await createRecipeWithImage(formData)
+      // Preparar datos para actualizar
+      const updateData = {
+        title: title.trim(),
+        description: description.trim() || null,
+        categoryId: categoryId ? Number(categoryId) : null,
+        imageUrl: imageUrl || null,
+        prepTime: prepTime.trim() || null,
+        cookTime: cookTime.trim() || null,
+        servings: servings ? Number(servings) : null,
+        difficulty: difficulty || null,
+        ingredients: ingredients.filter((ing) => ing.name.trim() && ing.amount.trim()),
+      }
+
+      // Actualizar receta
+      const response = await fetch(`/api/recipes/${recipe.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateData),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Error al actualizar la receta")
+      }
 
       // Éxito
       onSuccess()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al crear la receta")
+      setError(err instanceof Error ? err.message : "Error al actualizar la receta")
     } finally {
       setIsSubmitting(false)
     }
@@ -265,7 +281,7 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
             id="cookTime"
             value={cookTime}
             onChange={(e) => setCookTime(e.target.value)}
-            placeholder="Ej: 45 min"
+            placeholder="Ej: 1 hora"
           />
         </div>
 
@@ -284,63 +300,44 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
 
       {/* Imagen */}
       <div className="space-y-2">
-        <Label htmlFor="image">Imagen</Label>
-        <div className="space-y-4">
+        <Label htmlFor="image">Imagen de la receta</Label>
+        <div className="flex flex-col gap-4">
+          {previewUrl && (
+            <div className="relative w-full h-48 rounded-lg overflow-hidden border">
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
           <div className="flex items-center gap-4">
             <Input
               id="image"
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="hidden"
+              className="flex-1"
             />
             <Button
               type="button"
               variant="outline"
               onClick={() => document.getElementById("image")?.click()}
             >
-              <Upload className="h-4 w-4 mr-2" />
-              {imageFile ? "Cambiar imagen" : "Seleccionar imagen"}
+              <ImageIcon className="h-4 w-4 mr-2" />
+              Cambiar imagen
             </Button>
-            {imageFile && (
-              <span className="text-sm text-muted-foreground">{imageFile.name}</span>
-            )}
           </div>
-
-          {previewUrl && (
-            <Card>
-              <CardContent className="p-4">
-                <div className="relative aspect-video rounded-md overflow-hidden bg-muted">
-                  <img
-                    src={previewUrl}
-                    alt="Preview"
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {!previewUrl && (
-            <Card>
-              <CardContent className="p-8">
-                <div className="flex flex-col items-center justify-center text-muted-foreground">
-                  <ImageIcon className="h-12 w-12 mb-2" />
-                  <p className="text-sm">Vista previa de la imagen</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <p className="text-xs text-muted-foreground">
+            Tamaño máximo: 5MB. Formatos: JPG, PNG, GIF, WebP
+          </p>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Tamaño máximo: 5MB. Formatos: JPG, PNG, GIF, WebP
-        </p>
       </div>
 
       {/* Botones */}
-      <div className="flex gap-4">
+      <div className="flex gap-4 pt-4">
         <Button type="submit" disabled={isSubmitting} className="flex-1">
-          {isSubmitting ? "Creando..." : "Crear Receta"}
+          {isSubmitting ? "Guardando..." : "Guardar cambios"}
         </Button>
         <Button
           type="button"

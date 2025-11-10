@@ -14,7 +14,16 @@ interface RecipeCarouselProps {
 export function RecipeCarousel({ recipes }: RecipeCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
 
+  // Resetear el índice cuando cambian las recetas
   useEffect(() => {
+    if (currentIndex >= recipes.length) {
+      setCurrentIndex(0)
+    }
+  }, [recipes, currentIndex])
+
+  useEffect(() => {
+    if (recipes.length === 0) return
+    
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % recipes.length)
     }, 5000)
@@ -34,6 +43,11 @@ export function RecipeCarousel({ recipes }: RecipeCarouselProps) {
   }
 
   const currentRecipe = recipes[currentIndex]
+  
+  // Protección adicional por si currentRecipe es undefined
+  if (!currentRecipe) {
+    return null
+  }
 
   return (
     <div className="relative w-full overflow-hidden rounded-3xl">
@@ -48,11 +62,7 @@ export function RecipeCarousel({ recipes }: RecipeCarouselProps) {
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
             <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8 text-white">
-              {currentRecipe.categoryName && (
-                <div className="mb-2 inline-block rounded-full bg-primary px-3 py-1 text-sm font-medium">
-                  {currentRecipe.categoryName}
-                </div>
-              )}
+              
               <h2 className="mb-2 text-2xl sm:text-3xl md:text-4xl font-bold text-balance">{currentRecipe.title}</h2>
               <p className="mb-4 text-base sm:text-lg text-white/90 text-pretty max-w-xl sm:max-w-2xl line-clamp-2">
                 {currentRecipe.description && currentRecipe.description.length > 150 
@@ -67,6 +77,15 @@ export function RecipeCarousel({ recipes }: RecipeCarouselProps) {
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
                   <span>{currentRecipe.servings} personas</span>
+                  {currentRecipe.categoryName && (
+                <Link 
+                  to={`/?category=${encodeURIComponent(currentRecipe.categoryName)}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="mb-0 inline-block rounded-full bg-primary px-3 py-1 text-sm font-medium hover:bg-primary/90 transition-colors"
+                >
+                  {currentRecipe.categoryName}
+                </Link>
+              )}
                 </div>
               </div>
               <Link to={`/recipe/${currentRecipe.id}`}>

@@ -26,6 +26,10 @@ export function RecipeCard({ recipe, onFavoriteToggle, isFavorite = false }: Rec
   const [myRating, setMyRating] = useState<number | null>(null)
 
   useEffect(() => {
+    setFavorite(isFavorite)
+  }, [isFavorite])
+
+  useEffect(() => {
     setUser(getUser())
     ;(async () => {
       try {

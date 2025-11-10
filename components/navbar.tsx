@@ -27,11 +27,14 @@ export function Navbar() {
   const handleLogout = () => {
     logout()
     setUser(null)
-    navigate("/", { replace: true })
+    // Recargar la página para limpiar el estado de favoritos
+    window.location.href = "/"
   }
 
   const handleAuthSuccess = () => {
     setUser(getUser())
+    // Recargar la página para cargar los favoritos del usuario
+    window.location.reload()
   }
 
   return (
@@ -42,7 +45,7 @@ export function Navbar() {
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
               <ChefHat className="h-6 w-6 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold">RecetasKawaii</span>
+            <span className="text-xl font-bold">Kokumi</span>
           </Link>
 
           <div className="flex items-center gap-4">
@@ -50,7 +53,7 @@ export function Navbar() {
               <Button asChild variant="default" size="sm">
                 <Link to="/create-recipe" className="flex items-center gap-2">
                   <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline">Crear Receta</span>
+                  <span className="hidden sm:inline">¡Comparte una nueva receta!</span>
                 </Link>
               </Button>
             )}
@@ -63,16 +66,16 @@ export function Navbar() {
                     className="inline-flex items-center gap-2 rounded-md h-9 px-4 text-sm hover:bg-accent hover:text-accent-foreground"
                   >
                     <UserIcon className="h-5 w-5" />
-                    <span className="hidden sm:inline">{user.name}</span>
+                    <span className="hidden sm:inline">¡Bienvenid@ {user.name}!</span>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+                  <DropdownMenuLabel>¿Qué quieres hacer?</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to="/account" className="flex items-center gap-2 cursor-pointer">
                       <UserIcon className="h-4 w-4" />
-                      Cuenta
+                      Mi Cuenta
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>

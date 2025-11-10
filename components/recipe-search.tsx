@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -9,12 +9,19 @@ import { legacyCategories } from "@/lib/recipes"
 
 interface RecipeSearchProps {
   onSearch: (query: string, category: string, ingredient: string) => void
+  initialCategory?: string
 }
 
-export function RecipeSearch({ onSearch }: RecipeSearchProps) {
+export function RecipeSearch({ onSearch, initialCategory = "" }: RecipeSearchProps) {
   const [query, setQuery] = useState("")
-  const [category, setCategory] = useState("")
+  const [category, setCategory] = useState(initialCategory)
   const [ingredient, setIngredient] = useState("")
+
+  useEffect(() => {
+    if (initialCategory) {
+      setCategory(initialCategory)
+    }
+  }, [initialCategory])
 
   const handleSearch = () => {
     onSearch(query, category, ingredient)
@@ -42,8 +49,17 @@ export function RecipeSearch({ onSearch }: RecipeSearchProps) {
             className="pl-10 h-12 rounded-full"
           />
         </div>
+        
+        <Input
+          placeholder="Ingrediente..."
+          value={ingredient}
+          onChange={(e) => setIngredient(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+          className="w-full md:w-48 h-12 rounded-full"
+        />
+
         <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger className="w-full md:w-48 h-12 rounded-full">
+          <SelectTrigger className="w-full md:w-48 !h-12 rounded-full flex items-center px-4">
             <SelectValue placeholder="Categoría" />
           </SelectTrigger>
           <SelectContent>
@@ -55,13 +71,6 @@ export function RecipeSearch({ onSearch }: RecipeSearchProps) {
             ))}
           </SelectContent>
         </Select>
-        <Input
-          placeholder="Ingrediente..."
-          value={ingredient}
-          onChange={(e) => setIngredient(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-          className="w-full md:w-48 h-12 rounded-full"
-        />
         <Button onClick={handleSearch} size="lg" className="rounded-full h-12 px-8">
           Buscar
         </Button>

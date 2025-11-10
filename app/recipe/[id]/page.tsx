@@ -30,11 +30,6 @@ export default function RecipeDetailPage() {
 
   useEffect(() => {
     setUser(getUser())
-    const savedFavorites = localStorage.getItem("favorites")
-    if (savedFavorites) {
-      const favorites = JSON.parse(savedFavorites)
-      setIsFavorite(favorites.includes(recipeId))
-    }
     
     // Cargar receta y datos relacionados
     ;(async () => {
@@ -64,13 +59,20 @@ export default function RecipeDetailPage() {
           setAvgRating(d.average)
           setRatingCount(d.count)
         }
-        // cargar rating del usuario
+        // cargar rating del usuario y favoritos
         const u = getUser()
         if (u) {
           const ur = await fetch(`http://localhost:5174/api/users/${u.id}/ratings/${recipeId}`)
           if (ur.ok) {
             const x: { rating: number | null } = await ur.json()
             setMyRating(x.rating)
+          }
+          // Cargar favoritos del usuario
+          const favRes = await fetch(`http://localhost:5174/api/users/${u.id}/favorites`)
+          if (favRes.ok) {
+            const favData: { userId: string; recipeId: string }[] = await favRes.json()
+            const favoriteIds = favData.map((f) => f.recipeId)
+            setIsFavorite(favoriteIds.includes(recipeId))
           }
         }
       } catch (e) {
@@ -81,19 +83,29 @@ export default function RecipeDetailPage() {
     })()
   }, [recipeId])
 
-  const handleFavoriteToggle = () => {
+  const handleFavoriteToggle = async () => {
     if (!user) {
       alert("Debes iniciar sesión para guardar favoritos")
       return
     }
 
-    const savedFavorites = localStorage.getItem("favorites")
-    const favorites = savedFavorites ? JSON.parse(savedFavorites) : []
-
-    const newFavorites = isFavorite ? favorites.filter((id: string) => id !== recipeId) : [...favorites, recipeId]
-
-    localStorage.setItem("favorites", JSON.stringify(newFavorites))
-    setIsFavorite(!isFavorite)
+    try {
+      if (isFavorite) {
+        // Eliminar de favoritos
+        await fetch(`http://localhost:5174/api/users/${user.id}/favorites/${recipeId}`, { method: "DELETE" })
+        setIsFavorite(false)
+      } else {
+        // Agregar a favoritos
+        await fetch(`http://localhost:5174/api/users/${user.id}/favorites`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recipeId }),
+        })
+        setIsFavorite(true)
+      }
+    } catch (e) {
+      console.error("Error al actualizar favoritos:", e)
+    }
   }
 
   const handleSubmitComment = async (e: React.FormEvent) => {

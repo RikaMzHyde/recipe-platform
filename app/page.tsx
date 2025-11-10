@@ -1,34 +1,70 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSearchParams } from "react-router-dom"
 import { Navbar } from "@/components/navbar"
 import { RecipeCarousel } from "@/components/recipe-carousel"
 import { RecipeCard } from "@/components/recipe-card"
 import { RecipeSearch } from "@/components/recipe-search"
 import { fetchRecipes, type Recipe } from "@/lib/recipes"
+import { getUser } from "@/lib/auth"
 
 export default function HomePage() {
+  const [searchParams] = useSearchParams()
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([])
   const [favorites, setFavorites] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const [initialCategory, setInitialCategory] = useState<string>('')
 
   useEffect(() => {
-    const savedFavorites = localStorage.getItem("favorites")
-    if (savedFavorites) {
-      setFavorites(JSON.parse(savedFavorites))
+    // Leer parámetro de categoría desde la URL
+    const categoryParam = searchParams.get('category')
+    if (categoryParam) {
+      setInitialCategory(categoryParam)
+      // Hacer scroll a la sección de resultados después de un breve delay
+      setTimeout(() => {
+        const resultsSection = document.getElementById('results-section')
+        if (resultsSection) {
+          resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 300)
     }
     
     // Cargar recetas desde el backend
     loadRecipes()
-  }, [])
+    
+    // Cargar favoritos del usuario desde el backend
+    const user = getUser()
+    if (user) {
+      ;(async () => {
+        try {
+          const favRes = await fetch(`/api/users/${user.id}/favorites`)
+          if (favRes.ok) {
+            const favData: { userId: string; recipeId: string }[] = await favRes.json()
+            setFavorites(favData.map((f) => f.recipeId))
+          }
+        } catch (e) {
+          console.error("Error al cargar favoritos:", e)
+        }
+      })()
+    }
+  }, [searchParams])
 
   const loadRecipes = async () => {
     setLoading(true)
     try {
       const data = await fetchRecipes()
-      setRecipes(data)
       setAllRecipes(data)
+      
+      // Aplicar filtro de categoría si existe en la URL
+      const categoryParam = searchParams.get('category')
+      if (categoryParam) {
+        const filtered = data.filter((recipe) => recipe.categoryName === categoryParam)
+        setRecipes(filtered)
+      } else {
+        setRecipes(data)
+      }
     } catch (error) {
       console.error("Error al cargar recetas:", error)
     } finally {
@@ -65,16 +101,33 @@ export default function HomePage() {
     setRecipes(filtered)
   }
 
-  const handleFavoriteToggle = (recipeId: string) => {
-    const newFavorites = favorites.includes(recipeId)
-      ? favorites.filter((id) => id !== recipeId)
-      : [...favorites, recipeId]
+  const handleFavoriteToggle = async (recipeId: string) => {
+    const user = getUser()
+    if (!user) {
+      alert("Debes iniciar sesión para guardar favoritos")
+      return
+    }
 
-    setFavorites(newFavorites)
-    localStorage.setItem("favorites", JSON.stringify(newFavorites))
+    try {
+      if (favorites.includes(recipeId)) {
+        // Eliminar de favoritos
+        await fetch(`/api/users/${user.id}/favorites/${recipeId}`, { method: "DELETE" })
+        setFavorites((prev) => prev.filter((id) => id !== recipeId))
+      } else {
+        // Agregar a favoritos
+        await fetch(`/api/users/${user.id}/favorites`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recipeId }),
+        })
+        setFavorites((prev) => [...prev, recipeId])
+      }
+    } catch (e) {
+      console.error("Error al actualizar favoritos:", e)
+    }
   }
 
-  const featuredRecipes = recipes.slice(0, 5)
+  const featuredRecipes = allRecipes.slice(0, 5)
 
   return (
     <div className="min-h-screen bg-background">
@@ -92,10 +145,10 @@ export default function HomePage() {
               Busca por nombre, categoría o ingrediente para encontrar tu próxima comida favorita
             </p>
           </div>
-          <RecipeSearch onSearch={handleSearch} />
+          <RecipeSearch onSearch={handleSearch} initialCategory={initialCategory} />
         </section>
 
-        <section className="px-4 sm:px-8 md:px-12">
+        <section id="results-section" className="px-4 sm:px-8 md:px-12">
           <h2 className="text-2xl font-bold mb-6">
             {recipes.length === allRecipes.length ? "Todas las Recetas" : `${recipes.length} Recetas Encontradas`}
           </h2>

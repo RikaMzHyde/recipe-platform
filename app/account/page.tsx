@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getUser, setUser, type User } from "@/lib/auth"
 import type { Recipe } from "@/lib/recipes"
-import { RecipeCard } from "@/components/recipe-card"
+import { MyRecipeCard } from "@/components/my-recipe-card"
 
 export default function AccountPage() {
   const [user, setUserState] = useState<User | null>(null)
@@ -23,6 +23,9 @@ export default function AccountPage() {
   const [favorites, setFavorites] = useState<string[]>([])
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([])
   const [statusMsg, setStatusMsg] = useState<string>("")
+  const [statusMsgType, setStatusMsgType] = useState<"success" | "error">("error")
+  const [passwordMsg, setPasswordMsg] = useState<string>("")
+  const [passwordMsgType, setPasswordMsgType] = useState<"success" | "error">("error")
   const [creating, setCreating] = useState(false)
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
@@ -49,11 +52,11 @@ export default function AccountPage() {
         setAllRecipes(recData)
 
         if (u) {
-          // Mis recetas (IDs)
-          const mineRes = await fetch(`/api/users/${u.id}/my-recipes`)
+          // Mis recetas
+          const mineRes = await fetch(`/api/users/${u.id}/recipes`)
           if (!mineRes.ok) throw new Error("Error al cargar mis recetas")
-          const mineData: { userId: string; recipeId: string }[] = await mineRes.json()
-          setMyRecipesIds(mineData.map((m) => m.recipeId))
+          const mineData: Recipe[] = await mineRes.json()
+          setMyRecipesIds(mineData.map((m) => m.id))
 
           // Favoritos (para pintar corazones)
           const favRes = await fetch(`/api/users/${u.id}/favorites`)
@@ -85,40 +88,92 @@ export default function AccountPage() {
     )
   }
 
-  const handleSaveProfile = () => {
-    if (!name || !email) {
-      setStatusMsg("Por favor, completa nombre y email")
+  const handleSaveProfile = async () => {
+    if (!name || !name.trim()) {
+      setStatusMsg("Por favor, completa el nombre")
+      setStatusMsgType("error")
+      setTimeout(() => setStatusMsg(""), 3000)
       return
     }
-    const updated: User = { ...user, name, email }
-    setUser(updated)
-    setUserState(updated)
-    setStatusMsg("Datos guardados correctamente")
-    setTimeout(() => setStatusMsg(""), 2000)
+    
+    try {
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim() }),
+      })
+      
+      if (!res.ok) {
+        const error = await res.json()
+        setStatusMsg(error.error || "Error al guardar los cambios")
+        setStatusMsgType("error")
+        setTimeout(() => setStatusMsg(""), 3000)
+        return
+      }
+      
+      const updatedUser = await res.json()
+      const updated: User = { ...user, name: updatedUser.name }
+      setUser(updated)
+      setUserState(updated)
+      setStatusMsg("Datos guardados correctamente")
+      setStatusMsgType("success")
+      setTimeout(() => setStatusMsg(""), 2000)
+    } catch (e) {
+      setStatusMsg("Error al conectar con el servidor")
+      setStatusMsgType("error")
+      setTimeout(() => setStatusMsg(""), 3000)
+    }
   }
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
+    if (!currentPassword) {
+      setPasswordMsg("Por favor, ingresa tu contraseña actual")
+      setPasswordMsgType("error")
+      setTimeout(() => setPasswordMsg(""), 3000)
+      return
+    }
     if (newPassword.length < 6) {
-      setStatusMsg("La nueva contraseña debe tener al menos 6 caracteres")
+      setPasswordMsg("La nueva contraseña debe tener al menos 6 caracteres")
+      setPasswordMsgType("error")
+      setTimeout(() => setPasswordMsg(""), 3000)
       return
     }
     if (newPassword !== confirmPassword) {
-      setStatusMsg("Las contraseñas no coinciden")
+      setPasswordMsg("Las contraseñas no coinciden")
+      setPasswordMsgType("error")
+      setTimeout(() => setPasswordMsg(""), 3000)
       return
     }
-    // Simulación: guardamos en localStorage una contraseña asociada al usuario
-    const passKey = `pass:${user.id}`
-    const stored = localStorage.getItem(passKey)
-    if (stored && currentPassword !== stored) {
-      setStatusMsg("La contraseña actual no es correcta")
-      return
+
+    try {
+      const res = await fetch(`/api/users/${user.id}/password`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        setPasswordMsg(error.error || "Error al cambiar la contraseña")
+        setPasswordMsgType("error")
+        setTimeout(() => setPasswordMsg(""), 3000)
+        return
+      }
+
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+      setPasswordMsg("Contraseña actualizada correctamente")
+      setPasswordMsgType("success")
+      setTimeout(() => setPasswordMsg(""), 3000)
+    } catch (e) {
+      setPasswordMsg("Error al conectar con el servidor")
+      setPasswordMsgType("error")
+      setTimeout(() => setPasswordMsg(""), 3000)
     }
-    localStorage.setItem(passKey, newPassword)
-    setCurrentPassword("")
-    setNewPassword("")
-    setConfirmPassword("")
-    setStatusMsg("Contraseña actualizada")
-    setTimeout(() => setStatusMsg(""), 2000)
   }
 
   const myRecipes = allRecipes.filter((r) => myRecipesIds.includes(r.id))
@@ -140,6 +195,18 @@ export default function AccountPage() {
     } catch (e) {
       console.error(e)
     }
+  }
+
+  const handleDeleteRecipe = (recipeId: string) => {
+    // Eliminar de la lista de todas las recetas
+    setAllRecipes((prev) => prev.filter((r) => r.id !== recipeId))
+    // Eliminar de mis recetas
+    setMyRecipesIds((prev) => prev.filter((id) => id !== recipeId))
+    // Eliminar de favoritos si estaba
+    setFavorites((prev) => prev.filter((id) => id !== recipeId))
+    setStatusMsg("Receta eliminada correctamente")
+    setStatusMsgType("success")
+    setTimeout(() => setStatusMsg(""), 2000)
   }
 
   const handleCreateRecipe = async (e: React.FormEvent) => {
@@ -183,10 +250,12 @@ export default function AccountPage() {
       setServings(undefined)
       setDifficulty("")
       setStatusMsg("Receta creada")
+      setStatusMsgType("success")
       setTimeout(() => setStatusMsg(""), 2000)
     } catch (err) {
       console.error(err)
       setStatusMsg("Error al crear la receta")
+      setStatusMsgType("error")
       setTimeout(() => setStatusMsg(""), 2000)
     } finally {
       setCreating(false)
@@ -211,11 +280,27 @@ export default function AccountPage() {
                 </div>
                 <div>
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@email.com" />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    value={email} 
+                    readOnly 
+                    disabled
+                    className="bg-muted cursor-not-allowed"
+                    placeholder="tu@email.com" 
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">El email no se puede modificar</p>
                 </div>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-3 items-center">
                 <Button onClick={handleSaveProfile} className="rounded-full">Guardar cambios</Button>
+                {statusMsg && (
+                  <span className={`text-sm font-medium ${
+                    statusMsgType === "error" ? "text-destructive" : "text-green-600"
+                  }`}>
+                    {statusMsg}
+                  </span>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -223,28 +308,55 @@ export default function AccountPage() {
           <Card>
             <CardHeader>
               <CardTitle>Cambiar contraseña</CardTitle>
+              {passwordMsg && (
+                <div className={`mt-3 text-sm font-medium ${
+                  passwordMsgType === "error" ? "text-destructive" : "text-green-600"
+                }`}>
+                  {passwordMsg}
+                </div>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="current">Contraseña actual</Label>
-                <Input id="current" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+                <Input 
+                  id="current" 
+                  type="password" 
+                  value={currentPassword} 
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Ingresa tu contraseña actual"
+                />
               </div>
               <div>
                 <Label htmlFor="new">Nueva contraseña</Label>
-                <Input id="new" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                <Input 
+                  id="new" 
+                  type="password" 
+                  value={newPassword} 
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Mínimo 6 caracteres"
+                />
               </div>
               <div>
                 <Label htmlFor="confirm">Confirmar nueva contraseña</Label>
-                <Input id="confirm" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                <Input 
+                  id="confirm" 
+                  type="password" 
+                  value={confirmPassword} 
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repite la nueva contraseña"
+                />
               </div>
-              <div className="flex gap-3">
-                <Button variant="secondary" onClick={handleChangePassword} className="rounded-full">Actualizar contraseña</Button>
+              <div className="flex gap-3 items-center flex-wrap">
+                <Button variant="secondary" onClick={handleChangePassword} className="rounded-full">
+                  Actualizar contraseña
+                </Button>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Nueva receta</CardTitle>
           </CardHeader>
@@ -318,7 +430,7 @@ export default function AccountPage() {
               </div>
             </form>
           </CardContent>
-        </Card>
+        </Card> */}
 
         <section className="space-y-4">
           <div className="flex items-center justify-between">
@@ -330,9 +442,10 @@ export default function AccountPage() {
           {myRecipes.length > 0 ? (
             <div className="grid [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))] gap-6">
               {myRecipes.map((recipe) => (
-                <RecipeCard
+                <MyRecipeCard
                   key={recipe.id}
                   recipe={recipe}
+                  onDelete={handleDeleteRecipe}
                   onFavoriteToggle={toggleFavorite}
                   isFavorite={favorites.includes(recipe.id)}
                 />
@@ -346,10 +459,6 @@ export default function AccountPage() {
             </Card>
           )}
         </section>
-
-        {statusMsg && (
-          <div className="text-sm text-center text-primary">{statusMsg}</div>
-        )}
       </main>
     </div>
   )
