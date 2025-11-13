@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, X, Upload, ImageIcon } from "lucide-react"
 import { createRecipeWithImage, fetchCategories, type Category, type Ingredient } from "@/lib/recipes"
 
@@ -95,6 +95,12 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
       if (!title.trim()) {
         throw new Error("El título es obligatorio")
       }
+      if (!categoryId) {
+        throw new Error("La categoría es obligatoria")
+      }
+      if (!difficulty) {
+        throw new Error("La dificultad es obligatoria")
+      }
 
       const formData = new FormData()
 
@@ -134,12 +140,17 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
-        <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md">
-          {error}
-        </div>
-      )}
+    <Card>
+      <CardHeader>
+        <CardTitle>Información de la receta</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md">
+              {error}
+            </div>
+          )}
 
       {/* Título */}
       <div className="space-y-2">
@@ -151,7 +162,6 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Ej: Paella Valenciana"
-          required
         />
       </div>
 
@@ -180,7 +190,9 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
       {/* Categoría y Dificultad */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="category">Categoría</Label>
+          <Label htmlFor="category">
+            Categoría <span className="text-destructive">*</span>
+          </Label>
           <Select value={categoryId} onValueChange={setCategoryId}>
             <SelectTrigger>
               <SelectValue placeholder="Seleccionar categoría..." />
@@ -196,7 +208,9 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="difficulty">Dificultad</Label>
+          <Label htmlFor="difficulty">
+            Dificultad <span className="text-destructive">*</span>
+          </Label>
           <Select value={difficulty} onValueChange={setDifficulty}>
             <SelectTrigger>
               <SelectValue placeholder="Seleccionar dificultad..." />
@@ -350,7 +364,9 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
         >
           Cancelar
         </Button>
-      </div>
-    </form>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

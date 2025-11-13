@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export function Navbar() {
   const navigate = useNavigate()
@@ -49,6 +50,8 @@ export function Navbar() {
           </Link>
 
           <div className="flex items-center gap-4">
+            <ThemeToggle />
+            
             {user && (
               <Button asChild variant="default" size="sm">
                 <Link to="/create-recipe" className="flex items-center gap-2">
@@ -92,7 +95,7 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button onClick={() => setAuthDialogOpen(true)}>Iniciar Sesión</Button>
+              <Button onClick={() => setAuthDialogOpen(true)}>¡Únete a la mesa!</Button>
             )}
           </div>
         </div>

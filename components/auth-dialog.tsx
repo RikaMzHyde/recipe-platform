@@ -22,6 +22,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
   const [registerName, setRegisterName] = useState("")
   const [registerEmail, setRegisterEmail] = useState("")
   const [registerPassword, setRegisterPassword] = useState("")
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState("")
   const [error, setError] = useState("")
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -51,6 +52,17 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    
+    // Validar que las contraseñas coincidan
+    if (registerPassword !== registerConfirmPassword) {
+      return setError("Las contraseñas no coinciden")
+    }
+    
+    // Validar longitud mínima de contraseña
+    if (registerPassword.length < 6) {
+      return setError("La contraseña debe tener al menos 6 caracteres")
+    }
+    
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
@@ -71,6 +83,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
       setRegisterName("")
       setRegisterEmail("")
       setRegisterPassword("")
+      setRegisterConfirmPassword("")
     } catch (e) {
       setError("No se pudo conectar con el servidor")
     }
@@ -152,6 +165,18 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
                   placeholder="••••••"
                   value={registerPassword}
                   onChange={(e) => setRegisterPassword(e.target.value)}
+                  required
+                  minLength={6}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="register-confirm-password">Confirmar contraseña</Label>
+                <Input
+                  id="register-confirm-password"
+                  type="password"
+                  placeholder="••••••"
+                  value={registerConfirmPassword}
+                  onChange={(e) => setRegisterConfirmPassword(e.target.value)}
                   required
                 />
               </div>

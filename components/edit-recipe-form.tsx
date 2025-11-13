@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, X, ImageIcon } from "lucide-react"
 import { fetchCategories, type Category, type Ingredient, type Recipe } from "@/lib/recipes"
 
@@ -97,6 +98,12 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
       if (!title.trim()) {
         throw new Error("El título es obligatorio")
       }
+      if (!categoryId) {
+        throw new Error("La categoría es obligatoria")
+      }
+      if (!difficulty) {
+        throw new Error("La dificultad es obligatoria")
+      }
 
       let imageUrl = recipe.imageUrl
 
@@ -150,12 +157,17 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
-        <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md">
-          {error}
-        </div>
-      )}
+    <Card>
+      <CardHeader>
+        <CardTitle>Editar información de la receta</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md">
+              {error}
+            </div>
+          )}
 
       {/* Título */}
       <div className="space-y-2">
@@ -167,7 +179,6 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Ej: Paella Valenciana"
-          required
         />
       </div>
 
@@ -196,7 +207,9 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
       {/* Categoría y Dificultad */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="category">Categoría</Label>
+          <Label htmlFor="category">
+            Categoría <span className="text-destructive">*</span>
+          </Label>
           <Select value={categoryId} onValueChange={setCategoryId}>
             <SelectTrigger>
               <SelectValue placeholder="Seleccionar categoría..." />
@@ -212,7 +225,9 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="difficulty">Dificultad</Label>
+          <Label htmlFor="difficulty">
+            Dificultad <span className="text-destructive">*</span>
+          </Label>
           <Select value={difficulty} onValueChange={setDifficulty}>
             <SelectTrigger>
               <SelectValue placeholder="Seleccionar dificultad..." />
@@ -347,7 +362,9 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
         >
           Cancelar
         </Button>
-      </div>
-    </form>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

@@ -344,6 +344,22 @@ export default function RecipeDetailPage() {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm">
+                  2
+                </span>
+                Resumen de preparación
+              </h2>
+              {recipe.description && recipe.description.trim().length > 0 ? (
+                <p className="text-pretty text-muted-foreground">{recipe.description}</p>
+              ) : (
+                <p className="text-muted-foreground">No hay resumen de preparación disponible</p>
+              )}
+            </CardContent>
+          </Card>
+
         </div>
 
         <div className="grid grid-cols-1 gap-8 mt-8">
