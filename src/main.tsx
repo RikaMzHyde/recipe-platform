@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
 import '@/app/globals.css'
+import { Layout } from '@/components/layout'
+import { ThemeProvider } from '@/contexts/theme-context'
 
 import HomePage from '@/app/page'
 import FavoritesPage from '@/app/favorites/page'
@@ -12,16 +14,18 @@ import AccountPage from '@/app/account/page'
 import CreateRecipePage from '@/app/create-recipe/page'
 
 const router = createBrowserRouter([
-  { path: '/', element: <HomePage /> },
-  { path: '/favorites', element: <FavoritesPage /> },
-  { path: '/account', element: <AccountPage /> },
-  { path: '/recipe/:id', element: <RecipeDetailPage /> },
-  { path: '/recipe/:id/edit', element: <EditRecipePage /> },
-  { path: '/create-recipe', element: <CreateRecipePage /> },
+  { path: '/', element: <Layout><HomePage /></Layout> },
+  { path: '/favorites', element: <Layout><FavoritesPage /></Layout> },
+  { path: '/account', element: <Layout><AccountPage /></Layout> },
+  { path: '/recipe/:id', element: <Layout><RecipeDetailPage /></Layout> },
+  { path: '/recipe/:id/edit', element: <Layout><EditRecipePage /></Layout> },
+  { path: '/create-recipe', element: <Layout><CreateRecipePage /></Layout> },
 ])
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <ThemeProvider>
+      <RouterProvider router={router} />
+    </ThemeProvider>
   </React.StrictMode>,
 )
