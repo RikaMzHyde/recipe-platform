@@ -264,7 +264,6 @@ export default function RecipeDetailPage() {
               </Avatar>
               <div>
                 <p className="font-medium">Por {recipe.userName}</p>
-                <p className="text-sm text-muted-foreground">Chef</p>
               </div>
             </div>
 

@@ -1,12 +1,15 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef, useCallback, type ChangeEvent } from "react"
 import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getUser, setUser, type User } from "@/lib/auth"
 import type { Recipe } from "@/lib/recipes"
 import { MyRecipeCard } from "@/components/my-recipe-card"
+import Cropper, { type Area } from "react-easy-crop"
 
 export default function AccountPage() {
   const [user, setUserState] = useState<User | null>(null)
@@ -33,6 +36,14 @@ export default function AccountPage() {
   const [cookTime, setCookTime] = useState("")
   const [servings, setServings] = useState<number | undefined>(undefined)
   const [difficulty, setDifficulty] = useState("")
+  const [avatarUrl, setAvatarUrl] = useState<string>("")
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
+  const [cropImageUrl, setCropImageUrl] = useState<string | null>(null)
+  const [isCropOpen, setIsCropOpen] = useState(false)
 
   useEffect(() => {
     const u = getUser()
@@ -40,6 +51,7 @@ export default function AccountPage() {
     if (u) {
       setName(u.name)
       setEmail(u.email)
+      setAvatarUrl(u.avatarUrl || "")
     }
     ;(async () => {
       try {
@@ -66,6 +78,10 @@ export default function AccountPage() {
         console.error(e)
       }
     })()
+  }, [])
+
+  const onCropComplete = useCallback((_croppedArea: Area, croppedPixels: Area) => {
+    setCroppedAreaPixels(croppedPixels)
   }, [])
 
   if (!user) {
@@ -110,9 +126,10 @@ export default function AccountPage() {
       }
       
       const updatedUser = await res.json()
-      const updated: User = { ...user, name: updatedUser.name }
+      const updated: User = { ...user, name: updatedUser.name, avatarUrl: updatedUser.avatarUrl }
       setUser(updated)
       setUserState(updated)
+      setAvatarUrl(updated.avatarUrl || "")
       setStatusMsg("Datos guardados correctamente")
       setStatusMsgType("success")
       setTimeout(() => setStatusMsg(""), 2000)
@@ -260,15 +277,227 @@ export default function AccountPage() {
     }
   }
 
+  const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+
+    if (file.size > 5 * 1024 * 1024) {
+      setStatusMsg("La imagen no puede superar los 5MB")
+      setStatusMsgType("error")
+      setTimeout(() => setStatusMsg(""), 3000)
+      e.target.value = ""
+      return
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setStatusMsg("Solo se permiten archivos de imagen")
+      setStatusMsgType("error")
+      setTimeout(() => setStatusMsg(""), 3000)
+      e.target.value = ""
+      return
+    }
+
+    const objectUrl = URL.createObjectURL(file)
+    setCropImageUrl(objectUrl)
+    setCrop({ x: 0, y: 0 })
+    setZoom(1)
+    setCroppedAreaPixels(null)
+    setIsCropOpen(true)
+  }
+
+  const getCroppedImageBlob = async (imageSrc: string, cropPixels: Area): Promise<Blob> => {
+    const createImage = (url: string): Promise<HTMLImageElement> => {
+      return new Promise((resolve, reject) => {
+        const image = new Image()
+        image.addEventListener("load", () => resolve(image))
+        image.addEventListener("error", (error) => reject(error))
+        image.setAttribute("crossOrigin", "anonymous")
+        image.src = url
+      })
+    }
+
+    const image = await createImage(imageSrc)
+    const canvas = document.createElement("canvas")
+    const ctx = canvas.getContext("2d")
+    if (!ctx) {
+      throw new Error("No se pudo crear el lienzo para recortar la imagen")
+    }
+
+    const { width, height, x, y } = cropPixels
+    canvas.width = width
+    canvas.height = height
+
+    ctx.drawImage(image, x, y, width, height, 0, 0, width, height)
+
+    return await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error("No se pudo generar la imagen recortada"))
+          return
+        }
+        resolve(blob)
+      }, "image/jpeg", 0.9)
+    })
+  }
+
+  const handleConfirmCrop = async () => {
+    if (!user || !cropImageUrl || !croppedAreaPixels) return
+
+    setAvatarUploading(true)
+    setStatusMsg("")
+
+    try {
+      const blob = await getCroppedImageBlob(cropImageUrl, croppedAreaPixels)
+      const formData = new FormData()
+      formData.append("image", blob, "avatar.jpg")
+
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!uploadRes.ok) {
+        const err = await uploadRes.json().catch(() => ({ error: "Error al subir la imagen" }))
+        setStatusMsg(err.error || "Error al subir la imagen")
+        setStatusMsgType("error")
+        setTimeout(() => setStatusMsg(""), 3000)
+        return
+      }
+
+      const uploadData = (await uploadRes.json()) as { url: string }
+      const newAvatarUrl = uploadData.url
+
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), avatarUrl: newAvatarUrl }),
+      })
+
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({ error: "Error al guardar la foto de perfil" }))
+        setStatusMsg(error.error || "Error al guardar la foto de perfil")
+        setStatusMsgType("error")
+        setTimeout(() => setStatusMsg(""), 3000)
+        return
+      }
+
+      const updatedUser = await res.json()
+      const updated: User = { ...user, name: updatedUser.name, avatarUrl: updatedUser.avatarUrl }
+      setUser(updated)
+      setUserState(updated)
+      setAvatarUrl(updated.avatarUrl || "")
+      setStatusMsg("Foto de perfil actualizada")
+      setStatusMsgType("success")
+      setTimeout(() => setStatusMsg(""), 2000)
+    } catch (err) {
+      console.error(err)
+      setStatusMsg("Error al actualizar la foto de perfil")
+      setStatusMsgType("error")
+      setTimeout(() => setStatusMsg(""), 3000)
+    } finally {
+      setAvatarUploading(false)
+      if (cropImageUrl) {
+        URL.revokeObjectURL(cropImageUrl)
+      }
+      setCropImageUrl(null)
+      setIsCropOpen(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
+      <Dialog
+        open={isCropOpen}
+        onOpenChange={(open) => {
+          setIsCropOpen(open)
+          if (!open && cropImageUrl) {
+            URL.revokeObjectURL(cropImageUrl)
+            setCropImageUrl(null)
+            if (fileInputRef.current) {
+              fileInputRef.current.value = ""
+            }
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ajusta tu foto de perfil</DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full h-64 bg-black/80 rounded-md overflow-hidden">
+            {cropImageUrl && (
+              <Cropper
+                image={cropImageUrl}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+              />
+            )}
+          </div>
+          <div className="flex items-center gap-3 mt-4">
+            <input
+              type="range"
+              min={1}
+              max={3}
+              step={0.1}
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              size="sm"
+              className="rounded-full"
+              disabled={avatarUploading}
+              onClick={handleConfirmCrop}
+            >
+              {avatarUploading ? "Guardando..." : "Guardar recorte"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <main className="container px-4 sm:px-8 md:px-12 max-w-none mx-auto w-full py-8 space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="lg:col-span-2">
-            <CardHeader>
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <CardTitle>Mi cuenta</CardTitle>
+              <div className="flex items-center gap-3">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={avatarUrl || "/placeholder.svg"} alt={name} />
+                  <AvatarFallback>{name ? name[0] : "?"}</AvatarFallback>
+                </Avatar>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Foto de perfil</p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full"
+                      disabled={avatarUploading}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      {avatarUploading ? "Subiendo..." : "Cambiar foto"}
+                    </Button>
+                    <input
+                      ref={fileInputRef}
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                    />
+                  </div>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -429,34 +658,6 @@ export default function AccountPage() {
             </form>
           </CardContent>
         </Card> */}
-
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">Mis recetas</h2>
-              <p className="text-muted-foreground">Aquí verás tus recetas guardadas como propias.</p>
-            </div>
-          </div>
-          {myRecipes.length > 0 ? (
-            <div className="grid [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))] gap-6">
-              {myRecipes.map((recipe) => (
-                <MyRecipeCard
-                  key={recipe.id}
-                  recipe={recipe}
-                  onDelete={handleDeleteRecipe}
-                  onFavoriteToggle={toggleFavorite}
-                  isFavorite={favorites.includes(recipe.id)}
-                />
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
-                Aún no tienes recetas propias.
-              </CardContent>
-            </Card>
-          )}
-        </section>
       </main>
     </div>
   )

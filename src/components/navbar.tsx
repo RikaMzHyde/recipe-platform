@@ -74,9 +74,15 @@ export function Navbar() {
                   <DropdownMenuLabel>¿Qué quieres hacer?</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/account" className="flex items-center gap-2 cursor-pointer">
+                    <Link to="/account" className="flex items-center gap-2">
                       <UserIcon className="h-4 w-4" />
                       Mi Cuenta
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/my-recipes" className="flex items-center gap-2 cursor-pointer">
+                      <ChefHat className="h-4 w-4" />
+                      Mis Recetas
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>

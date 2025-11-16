@@ -12,11 +12,13 @@ import RecipeDetailPage from '@/pages/RecipeDetailPage'
 import EditRecipePage from '@/pages/EditRecipePage'
 import AccountPage from '@/pages/AccountPage'
 import CreateRecipePage from '@/pages/CreateRecipePage'
+import MyRecipesPage from '@/pages/MyRecipesPage'
 
 const router = createBrowserRouter([
   { path: '/', element: <Layout><HomePage /></Layout> },
   { path: '/favorites', element: <Layout><FavoritesPage /></Layout> },
   { path: '/account', element: <Layout><AccountPage /></Layout> },
+  { path: '/my-recipes', element: <Layout><MyRecipesPage /></Layout> },
   { path: '/recipe/:id', element: <Layout><RecipeDetailPage /></Layout> },
   { path: '/recipe/:id/edit', element: <Layout><EditRecipePage /></Layout> },
   { path: '/create-recipe', element: <Layout><CreateRecipePage /></Layout> },
