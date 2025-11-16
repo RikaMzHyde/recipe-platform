@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, X, ImageIcon } from "lucide-react"
 import { fetchCategories, type Category, type Ingredient, type Recipe } from "@/lib/recipes"
+import { useToast } from "@/hooks/use-toast"
 
 interface EditRecipeFormProps {
   recipe: Recipe
@@ -24,6 +25,16 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
     recipe.ingredients && recipe.ingredients.length > 0 ? recipe.ingredients : [{ name: "", amount: "" }]
   )
   const [error, setError] = useState<string | null>(null)
+
+  const { toast } = useToast()
+
+  const showError = (message: string) => {
+    setError(message)
+    toast({
+      variant: "destructive",
+      description: message,
+    })
+  }
 
   // Form fields inicializados con los datos de la receta
   const [title, setTitle] = useState(recipe.title)
@@ -49,13 +60,13 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
     if (file) {
       // Validar tamaño (5MB máximo)
       if (file.size > 5 * 1024 * 1024) {
-        setError("La imagen no puede superar los 5MB")
+        showError("La imagen no puede superar los 5MB")
         return
       }
 
       // Validar tipo
       if (!file.type.startsWith("image/")) {
-        setError("Solo se permiten archivos de imagen")
+        showError("Solo se permiten archivos de imagen")
         return
       }
 
@@ -150,7 +161,8 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
       // Éxito
       onSuccess()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al actualizar la receta")
+      const message = err instanceof Error ? err.message : "Error al actualizar la receta"
+      showError(message)
     } finally {
       setIsSubmitting(false)
     }

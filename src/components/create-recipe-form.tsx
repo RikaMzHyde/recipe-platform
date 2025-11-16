@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, X, Upload, ImageIcon } from "lucide-react"
 import { createRecipeWithImage, fetchCategories, type Category, type Ingredient } from "@/lib/recipes"
+import { useToast } from "@/hooks/use-toast"
 
 interface CreateRecipeFormProps {
   userId: string
@@ -21,6 +22,16 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [ingredients, setIngredients] = useState<Ingredient[]>([{ name: "", amount: "" }])
   const [error, setError] = useState<string | null>(null)
+
+  const { toast } = useToast()
+
+  const showError = (message: string) => {
+    setError(message)
+    toast({
+      variant: "destructive",
+      description: message,
+    })
+  }
 
   // Form fields
   const [title, setTitle] = useState("")
@@ -46,13 +57,13 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
     if (file) {
       // Validar tamaño (5MB máximo)
       if (file.size > 5 * 1024 * 1024) {
-        setError("La imagen no puede superar los 5MB")
+        showError("La imagen no puede superar los 5MB")
         return
       }
 
       // Validar tipo
       if (!file.type.startsWith("image/")) {
-        setError("Solo se permiten archivos de imagen")
+        showError("Solo se permiten archivos de imagen")
         return
       }
 
@@ -135,7 +146,8 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
       // Éxito
       onSuccess()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al crear la receta")
+      const message = err instanceof Error ? err.message : "Error al crear la receta"
+      showError(message)
     } finally {
       setIsSubmitting(false)
     }

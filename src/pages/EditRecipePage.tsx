@@ -5,6 +5,7 @@ import { EditRecipeForm } from "@/components/edit-recipe-form"
 import { getUser } from "@/lib/auth"
 import type { Recipe } from "@/lib/recipes"
 import { Card, CardContent } from "@/components/ui/card"
+import { useToast } from "@/hooks/use-toast"
 
 export default function EditRecipePage() {
   const navigate = useNavigate()
@@ -13,7 +14,16 @@ export default function EditRecipePage() {
   const [recipe, setRecipe] = useState<Recipe | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const user = getUser()
+  const { toast } = useToast()
+  const [user] = useState(() => getUser())
+
+  const showError = (message: string) => {
+    setError(message)
+    toast({
+      variant: "destructive",
+      description: message,
+    })
+  }
 
   useEffect(() => {
     if (!user) {
@@ -29,13 +39,14 @@ export default function EditRecipePage() {
         
         // Verificar que el usuario es el propietario
         if (data.userId !== user.id) {
-          setError("No tienes permiso para editar esta receta")
+          showError("No tienes permiso para editar esta receta")
           return
         }
         
         setRecipe(data)
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error al cargar la receta")
+        const message = err instanceof Error ? err.message : "Error al cargar la receta"
+        showError(message)
       } finally {
         setLoading(false)
       }

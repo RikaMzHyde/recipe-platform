@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, Heart, Clock, Users, ChefHat, Flame, Star } from "lucide-react"
+import { ArrowLeft, Heart, Clock, Users, ChefHat, Flame, Star, Pencil } from "lucide-react"
 import { getUser } from "@/lib/auth"
 import type { Recipe } from "@/lib/recipes"
 
@@ -244,6 +244,17 @@ export default function RecipeDetailPage() {
                 </Button>
               </div>
               <p className="text-base sm:text-lg text-muted-foreground text-pretty">{recipe.description}</p>
+              {user && recipe.userId === user.id && (
+                <div className="mt-4">
+                  <Button
+                    className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs sm:text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 transition"
+                    onClick={() => navigate(`/recipe/${recipeId}/edit`)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Editar receta
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-3">

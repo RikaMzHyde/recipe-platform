@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { setUser } from "@/lib/auth"
+import { useToast } from "@/hooks/use-toast"
 
 interface AuthDialogProps {
   open: boolean
@@ -23,6 +24,16 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState("")
   const [error, setError] = useState("")
 
+  const { toast } = useToast()
+
+  const showError = (message: string) => {
+    setError(message)
+    toast({
+      variant: "destructive",
+      description: message,
+    })
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -34,7 +45,9 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: "Error de autenticación" }))
-        return setError(err.error || "Credenciales inválidas")
+        const message = err.error || "Credenciales inválidas"
+        showError(message)
+        return
       }
       const user = await res.json()
       setUser(user)
@@ -43,7 +56,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
       setLoginEmail("")
       setLoginPassword("")
     } catch (e) {
-      setError("No se pudo conectar con el servidor")
+      showError("No se pudo conectar con el servidor")
     }
   }
 
@@ -53,12 +66,14 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
     
     // Validar que las contraseñas coincidan
     if (registerPassword !== registerConfirmPassword) {
-      return setError("Las contraseñas no coinciden")
+      showError("Las contraseñas no coinciden")
+      return
     }
     
     // Validar longitud mínima de contraseña
     if (registerPassword.length < 6) {
-      return setError("La contraseña debe tener al menos 6 caracteres")
+      showError("La contraseña debe tener al menos 6 caracteres")
+      return
     }
     
     try {
@@ -69,10 +84,13 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
       })
       if (!res.ok) {
         if (res.status === 409) {
-          return setError("Ya existe una cuenta asociada a ese email")
+          showError("Ya existe una cuenta asociada a ese email")
+          return
         }
         const err = await res.json().catch(() => ({ error: "Error de registro" }))
-        return setError(err.error || "No se pudo registrar")
+        const message = err.error || "No se pudo registrar"
+        showError(message)
+        return
       }
       const user = await res.json()
       setUser(user)
@@ -83,7 +101,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
       setRegisterPassword("")
       setRegisterConfirmPassword("")
     } catch (e) {
-      setError("No se pudo conectar con el servidor")
+      showError("No se pudo conectar con el servidor")
     }
   }
 
