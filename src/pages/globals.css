@@ -1,9 +1,11 @@
+/* Carga de utilidades principales (Tailwind y animaciones) */
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Variante dark aplicada cuando el root tiene la clase .dark */
 @custom-variant dark (&:is(.dark *));
 
-/* Kawaii cute color palette with pastel colors */
+/* Paleta kawaii pastel para el tema claro (valores por defecto) */
 :root {
   --background: oklch(0.99 0.01 85);
   --foreground: oklch(0.25 0.02 280);
@@ -40,6 +42,7 @@
   --sidebar-ring: oklch(0.75 0.15 340);
 }
 
+/* Overrides de la paleta para el tema oscuro */
 .dark {
   --background: oklch(0.22 0.03 300); /* Lavanda muy oscuro */
   --foreground: oklch(0.96 0.02 330); /* Blanco rosadito pastel */
@@ -87,8 +90,7 @@
   --sidebar-border: oklch(0.32 0.03 300);
   --sidebar-ring: oklch(0.72 0.15 340);
 }
-
-
+/* Mapeo de variables CSS a tokens que entiende Tailwind (@theme inline) */
 @theme inline {
   --font-sans: "Geist", "Geist Fallback";
   --font-mono: "Geist Mono", "Geist Mono Fallback";
@@ -130,6 +132,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Estilos base aplicados a toda la aplicación */
 @layer base {
   * {
     @apply border-border outline-ring/50;

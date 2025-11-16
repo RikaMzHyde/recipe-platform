@@ -2,16 +2,16 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
-import '@/app/globals.css'
+import '@/pages/globals.css'
 import { Layout } from '@/components/layout'
 import { ThemeProvider } from '@/contexts/theme-context'
 
-import HomePage from '@/app/page'
-import FavoritesPage from '@/app/favorites/page'
-import RecipeDetailPage from '@/app/recipe/[id]/page'
-import EditRecipePage from '@/app/recipe/[id]/edit/page'
-import AccountPage from '@/app/account/page'
-import CreateRecipePage from '@/app/create-recipe/page'
+import HomePage from '@/pages/HomePage'
+import FavoritesPage from '@/pages/FavoritesPage'
+import RecipeDetailPage from '@/pages/RecipeDetailPage'
+import EditRecipePage from '@/pages/EditRecipePage'
+import AccountPage from '@/pages/AccountPage'
+import CreateRecipePage from '@/pages/CreateRecipePage'
 
 const router = createBrowserRouter([
   { path: '/', element: <Layout><HomePage /></Layout> },
