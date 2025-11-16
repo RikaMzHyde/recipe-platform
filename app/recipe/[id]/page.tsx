@@ -292,7 +292,7 @@ export default function RecipeDetailPage() {
                     <Users className="h-6 w-6 text-accent-foreground" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Porciones</p>
+                    <p className="text-sm text-muted-foreground">Raciones</p>
                     <p className="font-semibold">{recipe.servings} personas</p>
                   </div>
                 </CardContent>
@@ -352,8 +352,8 @@ export default function RecipeDetailPage() {
                 </span>
                 Resumen de preparación
               </h2>
-              {recipe.description && recipe.description.trim().length > 0 ? (
-                <p className="text-pretty text-muted-foreground">{recipe.description}</p>
+              {recipe.preparation && recipe.preparation.trim().length > 0 ? (
+                <p className="text-pretty text-muted-foreground whitespace-pre-line">{recipe.preparation}</p>
               ) : (
                 <p className="text-muted-foreground">No hay resumen de preparación disponible</p>
               )}

@@ -35,6 +35,7 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
   const [cookTime, setCookTime] = useState(recipe.cookTime || "")
   const [servings, setServings] = useState(recipe.servings?.toString() || "")
   const [difficulty, setDifficulty] = useState<string>(recipe.difficulty || "")
+  const [preparation, setPreparation] = useState(recipe.preparation || "")
 
   useEffect(() => {
     loadCategories()
@@ -132,6 +133,7 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
         cookTime: cookTime.trim() || null,
         servings: servings ? Number(servings) : null,
         difficulty: difficulty || null,
+        preparation: preparation.trim() || null,
         ingredients: ingredients.filter((ing) => ing.name.trim() && ing.amount.trim()),
       }
 
@@ -301,7 +303,7 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="servings">Porciones</Label>
+          <Label htmlFor="servings">Raciones</Label>
           <Input
             id="servings"
             type="number"
@@ -311,6 +313,28 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
             placeholder="Ej: 4"
           />
         </div>
+      </div>
+
+      {/* Preparación */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="preparation">Preparación</Label>
+          <span className={`text-xs ${preparation.length > 2000 ? 'text-destructive' : 'text-muted-foreground'}`}>
+            {preparation.length}/2000
+          </span>
+        </div>
+        <Textarea
+          id="preparation"
+          value={preparation}
+          onChange={(e) => {
+            if (e.target.value.length <= 2000) {
+              setPreparation(e.target.value)
+            }
+          }}
+          placeholder="Describe los pasos para preparar la receta...&#10;Ejemplo:&#10;1. Mezcla los ingredientes secos&#10;2. Añade los líquidos&#10;3. Hornea durante 30 minutos"
+          rows={8}
+          maxLength={2000}
+        />
       </div>
 
       {/* Imagen */}

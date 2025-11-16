@@ -15,6 +15,7 @@ export interface Recipe {
   cookTime: string | null
   servings: number | null
   difficulty: "Fácil" | "Media" | "Difícil" | null
+  preparation: string | null
   createdAt: string
   userId: string
   userName: string

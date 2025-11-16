@@ -32,6 +32,7 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
   const [cookTime, setCookTime] = useState("")
   const [servings, setServings] = useState("")
   const [difficulty, setDifficulty] = useState<string>("")
+  const [preparation, setPreparation] = useState("")
 
   useEffect(() => {
     loadCategories()
@@ -121,6 +122,9 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
       if (validIngredients.length > 0) {
         formData.append("ingredients", JSON.stringify(validIngredients))
       }
+
+      // Agregar preparación
+      if (preparation.trim()) formData.append("preparation", preparation.trim())
 
       // Agregar imagen si existe
       if (imageFile) {
@@ -284,7 +288,7 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="servings">Porciones</Label>
+          <Label htmlFor="servings">Raciones</Label>
           <Input
             id="servings"
             type="number"
@@ -294,6 +298,28 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
             placeholder="Ej: 4"
           />
         </div>
+      </div>
+
+      {/* Preparación */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="preparation">Preparación</Label>
+          <span className={`text-xs ${preparation.length > 2000 ? 'text-destructive' : 'text-muted-foreground'}`}>
+            {preparation.length}/2000
+          </span>
+        </div>
+        <Textarea
+          id="preparation"
+          value={preparation}
+          onChange={(e) => {
+            if (e.target.value.length <= 2000) {
+              setPreparation(e.target.value)
+            }
+          }}
+          placeholder="Describe los pasos para preparar la receta...&#10;Ejemplo:&#10;1. Mezcla los ingredientes secos&#10;2. Añade los líquidos&#10;3. Hornea durante 30 minutos"
+          rows={8}
+          maxLength={2000}
+        />
       </div>
 
       {/* Imagen */}
