@@ -64,7 +64,6 @@ export function RecipeSearch({ onSearch, initialCategory = "", categories }: Rec
             <SelectValue placeholder="Categoría" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
             {categories.map((cat) => (
               <SelectItem key={cat.id} value={cat.name}>
                 {cat.name}
@@ -78,7 +77,6 @@ export function RecipeSearch({ onSearch, initialCategory = "", categories }: Rec
             <SelectValue placeholder="Dificultad" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
             <SelectItem value="Fácil">Fácil</SelectItem>
             <SelectItem value="Media">Media</SelectItem>
             <SelectItem value="Difícil">Difícil</SelectItem>
