@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button"
 import { AuthDialog } from "@/components/auth-dialog"
 import { getUser, logout, type User } from "@/lib/auth"
 import { ChefHat, Heart, LogOut, UserIcon, Plus } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,7 +68,10 @@ export function Navbar() {
                     type="button"
                     className="inline-flex items-center gap-2 rounded-md h-9 px-4 text-sm hover:bg-accent hover:text-accent-foreground"
                   >
-                    <UserIcon className="h-5 w-5" />
+                    <Avatar className="h-8 w-8 border">
+                      <AvatarImage src={user.avatarUrl || undefined} alt={user.name} />
+                      <AvatarFallback>{user.name ? user.name[0] : "?"}</AvatarFallback>
+                    </Avatar>
                     <span className="hidden sm:inline">¡Bienvenid@ {user.name}!</span>
                   </button>
                 </DropdownMenuTrigger>
