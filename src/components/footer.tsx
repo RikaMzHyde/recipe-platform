@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { ChefHat, Github, Mail, Twitter } from "lucide-react"
+import { Github, Mail, Twitter } from "lucide-react"
 
 export function Footer() {
   const year = new Date().getFullYear()
@@ -9,10 +9,14 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
-                <ChefHat className="h-6 w-6 text-primary-foreground" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary overflow-hidden">
+                <img
+                  src="/kokumi-logo.png"
+                  alt="Kokumi logo"
+                  className="h-8 w-8 object-contain"
+                />
               </div>
-              <span className="text-xl font-bold">Kokumi</span>
+              <span className="text-xl font-semibold tracking-tight kokumi-logo-text">Kokumi</span>
             </div>
             <p className="mt-4 text-sm text-muted-foreground">
               Descubre, comparte y valora recetas deliciosas con una experiencia

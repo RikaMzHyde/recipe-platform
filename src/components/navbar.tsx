@@ -43,10 +43,19 @@ export function Navbar() {
       <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="px-3 sm:px-4 md:px-6 lg:px-6 mx-auto w-full flex h-16 items-center justify-between flex-wrap">
           <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
-              <ChefHat className="h-6 w-6 text-primary-foreground" />
+            <div className="flex h-15 w-15 items-center justify-center rounded-full bg-primary overflow-hidden">
+              <img
+                src="/kokumi-logo.png"
+                alt="Kokumi logo"
+                className="h-15 w-15 object-contain"
+              />
             </div>
-            <span className="text-xl font-bold">Kokumi</span>
+            <div className="flex flex-col leading-tight">
+              <span className="text-xl sm:text-5xl font-semibold tracking-tight kokumi-logo-text">Kokumi</span>
+              <span className="hidden sm:inline text-xs font-medium tracking-wide text-muted-foreground">
+                Recetas con sabor casero
+              </span>
+            </div>
           </Link>
 
           <div className="flex items-center gap-4">
