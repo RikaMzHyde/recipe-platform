@@ -4,7 +4,7 @@ import { Navbar } from "@/components/navbar"
 import { RecipeCarousel } from "@/components/recipe-carousel"
 import { RecipeCard } from "@/components/recipe-card"
 import { RecipeSearch } from "@/components/recipe-search"
-import { fetchRecipes, type Recipe } from "@/lib/recipes"
+import { fetchRecipes, fetchCategories, type Recipe, type Category } from "@/lib/recipes"
 import { getUser } from "@/lib/auth"
 
 export default function HomePage() {
@@ -14,6 +14,7 @@ export default function HomePage() {
   const [favorites, setFavorites] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [initialCategory, setInitialCategory] = useState<string>('')
+  const [categories, setCategories] = useState<Category[]>([])
 
   useEffect(() => {
     // Leer parámetro de categoría desde la URL
@@ -29,8 +30,9 @@ export default function HomePage() {
       }, 300)
     }
     
-    // Cargar recetas desde el backend
+    // Cargar recetas y categorías desde el backend
     loadRecipes()
+    loadCategories()
     
     // Cargar favoritos del usuario desde el backend
     const user = getUser()
@@ -67,6 +69,15 @@ export default function HomePage() {
       console.error("Error al cargar recetas:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadCategories = async () => {
+    try {
+      const data = await fetchCategories()
+      setCategories(data)
+    } catch (error) {
+      console.error("Error al cargar categorías:", error)
     }
   }
 
@@ -148,7 +159,7 @@ export default function HomePage() {
               Busca por nombre, categoría o ingrediente para encontrar tu próxima comida favorita
             </p>
           </div>
-          <RecipeSearch onSearch={handleSearch} initialCategory={initialCategory} />
+          <RecipeSearch onSearch={handleSearch} initialCategory={initialCategory} categories={categories} />
         </section>
 
         <section id="results-section" className="px-4 sm:px-8 md:px-12">

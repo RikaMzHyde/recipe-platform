@@ -44,7 +44,7 @@ export interface LegacyRecipe {
   authorAvatar: string
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5174'
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5174'
 
 // API Functions
 export async function fetchRecipes(): Promise<Recipe[]> {

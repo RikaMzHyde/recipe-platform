@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Heart, Clock, Users, ChefHat, Flame, Star, Pencil } from "lucide-react"
 import { getUser } from "@/lib/auth"
-import type { Recipe } from "@/lib/recipes"
+import { API_URL, type Recipe } from "@/lib/recipes"
 
 export default function RecipeDetailPage() {
   const params = useParams()
@@ -35,7 +35,7 @@ export default function RecipeDetailPage() {
         setLoading(true)
         
         // Cargar receta
-        const recipeRes = await fetch(`http://localhost:5174/api/recipes/${recipeId}`)
+        const recipeRes = await fetch(`${API_URL}/api/recipes/${recipeId}`)
         if (!recipeRes.ok) {
           setRecipe(null)
           setLoading(false)
@@ -45,13 +45,13 @@ export default function RecipeDetailPage() {
         setRecipe(recipeData)
         
         // cargar comentarios
-        const res = await fetch(`http://localhost:5174/api/recipes/${recipeId}/comments`)
+        const res = await fetch(`${API_URL}/api/recipes/${recipeId}/comments`)
         if (res.ok) {
           const data = await res.json()
           setComments(data)
         }
         // cargar rating promedio
-        const rr = await fetch(`http://localhost:5174/api/recipes/${recipeId}/ratings`)
+        const rr = await fetch(`${API_URL}/api/recipes/${recipeId}/ratings`)
         if (rr.ok) {
           const d: { average: number; count: number } = await rr.json()
           setAvgRating(d.average)
@@ -60,13 +60,13 @@ export default function RecipeDetailPage() {
         // cargar rating del usuario y favoritos
         const u = getUser()
         if (u) {
-          const ur = await fetch(`http://localhost:5174/api/users/${u.id}/ratings/${recipeId}`)
+          const ur = await fetch(`${API_URL}/api/users/${u.id}/ratings/${recipeId}`)
           if (ur.ok) {
             const x: { rating: number | null } = await ur.json()
             setMyRating(x.rating)
           }
           // Cargar favoritos del usuario
-          const favRes = await fetch(`http://localhost:5174/api/users/${u.id}/favorites`)
+          const favRes = await fetch(`${API_URL}/api/users/${u.id}/favorites`)
           if (favRes.ok) {
             const favData: { userId: string; recipeId: string }[] = await favRes.json()
             const favoriteIds = favData.map((f) => f.recipeId)
@@ -90,11 +90,11 @@ export default function RecipeDetailPage() {
     try {
       if (isFavorite) {
         // Eliminar de favoritos
-        await fetch(`http://localhost:5174/api/users/${user.id}/favorites/${recipeId}`, { method: "DELETE" })
+        await fetch(`${API_URL}/api/users/${user.id}/favorites/${recipeId}`, { method: "DELETE" })
         setIsFavorite(false)
       } else {
         // Agregar a favoritos
-        await fetch(`http://localhost:5174/api/users/${user.id}/favorites`, {
+        await fetch(`${API_URL}/api/users/${user.id}/favorites`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ recipeId }),
@@ -116,7 +116,7 @@ export default function RecipeDetailPage() {
     if (!content) return
     setSubmitting(true)
     try {
-      const res = await fetch(`http://localhost:5174/api/recipes/${recipeId}/comments`, {
+      const res = await fetch(`${API_URL}/api/recipes/${recipeId}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content, userId: user.id }),
@@ -139,14 +139,14 @@ export default function RecipeDetailPage() {
       return
     }
     try {
-      const res = await fetch(`http://localhost:5174/api/users/${user.id}/ratings/${recipeId}`, {
+      const res = await fetch(`${API_URL}/api/users/${user.id}/ratings/${recipeId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: value }),
       })
       if (!res.ok) return
       setMyRating(value)
-      const r = await fetch(`http://localhost:5174/api/recipes/${recipeId}/ratings`)
+      const r = await fetch(`${API_URL}/api/recipes/${recipeId}/ratings`)
       if (r.ok) {
         const d: { average: number; count: number } = await r.json()
         setAvgRating(d.average)
@@ -263,7 +263,7 @@ export default function RecipeDetailPage() {
                 <AvatarFallback>{recipe.userName[0]}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-medium">Por {recipe.userName}</p>
+                <p className="font-medium">Receta de {recipe.userName}</p>
               </div>
             </div>
 

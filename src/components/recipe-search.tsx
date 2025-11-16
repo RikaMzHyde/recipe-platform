@@ -3,14 +3,15 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, X } from "lucide-react"
-import { legacyCategories } from "@/lib/recipes"
+import type { Category } from "@/lib/recipes"
 
 interface RecipeSearchProps {
   onSearch: (query: string, category: string, ingredient: string, difficulty: string) => void
   initialCategory?: string
+  categories: Category[]
 }
 
-export function RecipeSearch({ onSearch, initialCategory = "" }: RecipeSearchProps) {
+export function RecipeSearch({ onSearch, initialCategory = "", categories }: RecipeSearchProps) {
   const [query, setQuery] = useState("")
   const [category, setCategory] = useState(initialCategory)
   const [ingredient, setIngredient] = useState("")
@@ -64,9 +65,9 @@ export function RecipeSearch({ onSearch, initialCategory = "" }: RecipeSearchPro
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
-            {legacyCategories.map((cat) => (
-              <SelectItem key={cat} value={cat}>
-                {cat}
+            {categories.map((cat) => (
+              <SelectItem key={cat.id} value={cat.name}>
+                {cat.name}
               </SelectItem>
             ))}
           </SelectContent>
