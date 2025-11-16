@@ -5,6 +5,7 @@ import { AuthDialog } from "@/components/auth-dialog"
 import { getUser, logout, type User } from "@/lib/auth"
 import { ChefHat, Heart, LogOut, UserIcon, Plus } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useToast } from "@/hooks/use-toast"
 
 import {
   DropdownMenu,
@@ -20,6 +21,7 @@ export function Navbar() {
   const navigate = useNavigate()
   const [user, setUser] = useState<User | null>(null)
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     setUser(getUser())
@@ -34,8 +36,6 @@ export function Navbar() {
 
   const handleAuthSuccess = () => {
     setUser(getUser())
-    // Recargar la página para cargar los favoritos del usuario
-    window.location.reload()
   }
 
   return (
@@ -110,7 +110,11 @@ export function Navbar() {
         </div>
       </nav>
 
-      <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} onSuccess={handleAuthSuccess} />
+      <AuthDialog 
+        open={authDialogOpen} 
+        onOpenChange={setAuthDialogOpen} 
+        onSuccess={handleAuthSuccess} 
+      />
     </>
   )
 }

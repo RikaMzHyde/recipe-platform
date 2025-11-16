@@ -70,7 +70,7 @@ export default function HomePage() {
     }
   }
 
-  const handleSearch = (query: string, category: string, ingredient: string) => {
+  const handleSearch = (query: string, category: string, ingredient: string, difficulty: string) => {
     let filtered = [...allRecipes]
 
     // Filtrar por query (título o descripción)
@@ -94,6 +94,11 @@ export default function HomePage() {
           ing.name.toLowerCase().includes(ingredient.toLowerCase())
         )
       )
+    }
+
+    // Filtrar por dificultad
+    if (difficulty && difficulty !== "all") {
+      filtered = filtered.filter((recipe) => recipe.difficulty === difficulty)
     }
 
     setRecipes(filtered)

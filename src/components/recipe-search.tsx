@@ -6,7 +6,7 @@ import { Search, X } from "lucide-react"
 import { legacyCategories } from "@/lib/recipes"
 
 interface RecipeSearchProps {
-  onSearch: (query: string, category: string, ingredient: string) => void
+  onSearch: (query: string, category: string, ingredient: string, difficulty: string) => void
   initialCategory?: string
 }
 
@@ -14,6 +14,7 @@ export function RecipeSearch({ onSearch, initialCategory = "" }: RecipeSearchPro
   const [query, setQuery] = useState("")
   const [category, setCategory] = useState(initialCategory)
   const [ingredient, setIngredient] = useState("")
+  const [difficulty, setDifficulty] = useState("")
 
   useEffect(() => {
     if (initialCategory) {
@@ -22,17 +23,18 @@ export function RecipeSearch({ onSearch, initialCategory = "" }: RecipeSearchPro
   }, [initialCategory])
 
   const handleSearch = () => {
-    onSearch(query, category, ingredient)
+    onSearch(query, category, ingredient, difficulty)
   }
 
   const handleClear = () => {
     setQuery("")
     setCategory("")
     setIngredient("")
-    onSearch("", "", "")
+    setDifficulty("")
+    onSearch("", "", "", "")
   }
 
-  const hasFilters = query || category || ingredient
+  const hasFilters = query || category || ingredient || difficulty
 
   return (
     <div className="w-full space-y-4">
@@ -67,6 +69,18 @@ export function RecipeSearch({ onSearch, initialCategory = "" }: RecipeSearchPro
                 {cat}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={difficulty} onValueChange={setDifficulty}>
+          <SelectTrigger className="w-full md:w-48 !h-12 rounded-full flex items-center px-4">
+            <SelectValue placeholder="Dificultad" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas</SelectItem>
+            <SelectItem value="Fácil">Fácil</SelectItem>
+            <SelectItem value="Media">Media</SelectItem>
+            <SelectItem value="Difícil">Difícil</SelectItem>
           </SelectContent>
         </Select>
         <Button onClick={handleSearch} size="lg" className="rounded-full h-12 px-8">

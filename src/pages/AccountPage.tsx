@@ -549,6 +549,7 @@ export default function AccountPage() {
                 <Input 
                   id="current" 
                   type="password" 
+                  name="currentPassword"
                   value={currentPassword} 
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="Ingresa tu contraseña actual"
