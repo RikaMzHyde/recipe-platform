@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Heart } from "lucide-react"
 import type { Recipe } from "@/lib/recipes"
 import { getUser } from "@/lib/auth"
+import { API_URL } from "@/lib/api"
 
 export default function FavoritesPage() {
   const navigate = useNavigate()
@@ -25,14 +26,14 @@ export default function FavoritesPage() {
     ;(async () => {
       try {
         // 1) Obtener IDs de favoritos del usuario
-        const favRes = await fetch(`/api/users/${currentUser.id}/favorites`)
+        const favRes = await fetch(`${API_URL}/api/users/${currentUser.id}/favorites`)
         if (!favRes.ok) throw new Error("Error al cargar favoritos")
         const favData: { userId: string; recipeId: string }[] = await favRes.json()
         const favoriteIds = favData.map((f) => f.recipeId)
         setFavorites(favoriteIds)
 
         // 2) Cargar recetas y filtrar por IDs
-        const recRes = await fetch(`/api/recipes`)
+        const recRes = await fetch(`${API_URL}/api/recipes`)
         if (!recRes.ok) throw new Error("Error al cargar recetas")
         const allRecipes: Recipe[] = await recRes.json()
         setFavoriteRecipes(allRecipes.filter((r) => favoriteIds.includes(r.id)))
@@ -45,7 +46,7 @@ export default function FavoritesPage() {
   const handleFavoriteToggle = async (recipeId: string) => {
     if (!user) return
     try {
-      await fetch(`/api/users/${user.id}/favorites/${recipeId}`, { method: "DELETE" })
+      await fetch(`${API_URL}/api/users/${user.id}/favorites/${recipeId}`, { method: "DELETE" })
       const newFavorites = favorites.filter((id) => id !== recipeId)
       setFavorites(newFavorites)
       setFavoriteRecipes((prev) => prev.filter((r) => r.id !== recipeId))

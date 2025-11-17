@@ -6,6 +6,7 @@ import { getUser } from "@/lib/auth"
 import type { Recipe } from "@/lib/recipes"
 import { Card, CardContent } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
+import { API_URL } from "@/lib/api"
 
 export default function EditRecipePage() {
   const navigate = useNavigate()
@@ -33,7 +34,7 @@ export default function EditRecipePage() {
 
     const loadRecipe = async () => {
       try {
-        const response = await fetch(`/api/recipes/${id}`)
+        const response = await fetch(`${API_URL}/recipes/${id}`)
         if (!response.ok) throw new Error("Error al cargar la receta")
         const data: Recipe = await response.json()
         

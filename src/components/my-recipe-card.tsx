@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Heart, Clock, Users, Pencil, Trash2 } from "lucide-react"
 import type { Recipe } from "@/lib/recipes"
+import { API_URL } from "@/lib/api"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,7 +58,7 @@ export function MyRecipeCard({ recipe, onDelete, onFavoriteToggle, isFavorite = 
   const handleConfirmDelete = async () => {
     setIsDeleting(true)
     try {
-      const res = await fetch(`/api/recipes/${recipe.id}`, {
+      const res = await fetch(`${API_URL}/recipes/${recipe.id}`, {
         method: "DELETE",
       })
       if (res.ok) {

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Heart, Clock, Users, Star } from "lucide-react"
+import { API_URL } from "@/lib/api"
 import type { Recipe } from "@/lib/recipes"
 import { getUser } from "@/lib/auth"
 
@@ -32,7 +33,7 @@ export function RecipeCard({ recipe, onFavoriteToggle, isFavorite = false }: Rec
     ;(async () => {
       try {
         // promedio
-        const r = await fetch(`/api/recipes/${recipe.id}/ratings`)
+        const r = await fetch(`${API_URL}/api/recipes/${recipe.id}/ratings`)
         if (r.ok) {
           const data: { average: number; count: number } = await r.json()
           setAvgRating(data.average)
@@ -41,7 +42,7 @@ export function RecipeCard({ recipe, onFavoriteToggle, isFavorite = false }: Rec
         // rating del usuario
         const u = getUser()
         if (u) {
-          const ur = await fetch(`/api/users/${u.id}/ratings/${recipe.id}`)
+          const ur = await fetch(`${API_URL}/api/users/${u.id}/ratings/${recipe.id}`)
           if (ur.ok) {
             const d: { rating: number | null } = await ur.json()
             setMyRating(d.rating)
@@ -68,14 +69,14 @@ export function RecipeCard({ recipe, onFavoriteToggle, isFavorite = false }: Rec
       return
     }
     try {
-      const res = await fetch(`/api/users/${user.id}/ratings/${recipe.id}`, {
+      const res = await fetch(`${API_URL}/api/users/${user.id}/ratings/${recipe.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: value }),
       })
       if (!res.ok) return
       setMyRating(value)
-      const r = await fetch(`/api/recipes/${recipe.id}/ratings`)
+      const r = await fetch(`${API_URL}/api/recipes/${recipe.id}/ratings`)
       if (r.ok) {
         const data: { average: number; count: number } = await r.json()
         setAvgRating(data.average)

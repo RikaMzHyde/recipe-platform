@@ -6,6 +6,7 @@ import { RecipeCard } from "@/components/recipe-card"
 import { RecipeSearch } from "@/components/recipe-search"
 import { fetchRecipes, fetchCategories, type Recipe, type Category } from "@/lib/recipes"
 import { getUser } from "@/lib/auth"
+import { API_URL } from "@/lib/api"
 
 export default function HomePage() {
   const [searchParams] = useSearchParams()
@@ -39,7 +40,7 @@ export default function HomePage() {
     if (user) {
       ;(async () => {
         try {
-          const favRes = await fetch(`/api/users/${user.id}/favorites`)
+          const favRes = await fetch(`${API_URL}/api/users/${user.id}/favorites`)
           if (favRes.ok) {
             const favData: { userId: string; recipeId: string }[] = await favRes.json()
             setFavorites(favData.map((f) => f.recipeId))
@@ -125,11 +126,11 @@ export default function HomePage() {
     try {
       if (favorites.includes(recipeId)) {
         // Eliminar de favoritos
-        await fetch(`/api/users/${user.id}/favorites/${recipeId}`, { method: "DELETE" })
+        await fetch(`${API_URL}/api/users/${user.id}/favorites/${recipeId}`, { method: "DELETE" })
         setFavorites((prev) => prev.filter((id) => id !== recipeId))
       } else {
         // Agregar a favoritos
-        await fetch(`/api/users/${user.id}/favorites`, {
+        await fetch(`${API_URL}/api/users/${user.id}/favorites`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ recipeId }),

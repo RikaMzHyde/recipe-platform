@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, X, ImageIcon } from "lucide-react"
 import { fetchCategories, type Category, type Ingredient, type Recipe } from "@/lib/recipes"
 import { useToast } from "@/hooks/use-toast"
+import { API_URL } from "@/lib/api"
 
 interface EditRecipeFormProps {
   recipe: Recipe
@@ -147,7 +148,7 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
       }
 
       // Actualizar receta
-      const response = await fetch(`/api/recipes/${recipe.id}`, {
+      const response = await fetch(`${API_URL}/recipes/${recipe.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updateData),

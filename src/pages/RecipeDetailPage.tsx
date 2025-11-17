@@ -8,7 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Heart, Clock, Users, ChefHat, Flame, Star, Pencil } from "lucide-react"
 import { getUser } from "@/lib/auth"
-import { API_URL, type Recipe } from "@/lib/recipes"
+import { type Recipe } from "@/lib/recipes"
+import { API_URL } from "@/lib/api"
 
 export default function RecipeDetailPage() {
   const params = useParams()

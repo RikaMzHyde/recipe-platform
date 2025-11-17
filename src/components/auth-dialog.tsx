@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { setUser } from "@/lib/auth"
 import { useToast } from "@/hooks/use-toast"
 import { fetchSecurityQuestions, getRandomSecurityQuestion, type SecurityQuestion } from "@/lib/security-questions"
+import { API_URL } from "@/lib/api"
 
 interface AuthDialogProps {
   open: boolean
@@ -166,7 +167,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
     setError("")
     
     try {
-      const res = await fetch(`/api/auth/security-question?email=${encodeURIComponent(resetEmail)}`)
+      const res = await fetch(`${API_URL}/auth/security-question?email=${encodeURIComponent(resetEmail)}`)
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: "Error al verificar email" }))
         showError(err.error || "Email no registrado")

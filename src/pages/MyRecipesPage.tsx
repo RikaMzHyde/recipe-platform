@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getUser, type User } from "@/lib/auth"
 import type { Recipe } from "@/lib/recipes"
 import { MyRecipeCard } from "@/components/my-recipe-card"
+import { API_URL } from "@/lib/api"
 
 export default function MyRecipesPage() {
   const [user] = useState<User | null>(() => getUser())
@@ -22,17 +23,17 @@ export default function MyRecipesPage() {
 
     const load = async () => {
       try {
-        const recRes = await fetch(`/api/recipes`)
+        const recRes = await fetch(`${API_URL}/api/recipes`)
         if (!recRes.ok) throw new Error("Error al cargar recetas")
         const recData: Recipe[] = await recRes.json()
         setAllRecipes(recData)
 
-        const mineRes = await fetch(`/api/users/${user.id}/recipes`)
+        const mineRes = await fetch(`${API_URL}/api/users/${user.id}/recipes`)
         if (!mineRes.ok) throw new Error("Error al cargar mis recetas")
         const mineData: Recipe[] = await mineRes.json()
         setMyRecipesIds(mineData.map((m) => m.id))
 
-        const favRes = await fetch(`/api/users/${user.id}/favorites`)
+        const favRes = await fetch(`${API_URL}/api/users/${user.id}/favorites`)
         if (!favRes.ok) throw new Error("Error al cargar favoritos")
         const favData: { userId: string; recipeId: string }[] = await favRes.json()
         setFavorites(favData.map((f) => f.recipeId))
@@ -54,10 +55,10 @@ export default function MyRecipesPage() {
     if (!user) return
     try {
       if (favorites.includes(recipeId)) {
-        await fetch(`/api/users/${user.id}/favorites/${recipeId}`, { method: "DELETE" })
+        await fetch(`${API_URL}/api/users/${user.id}/favorites/${recipeId}`, { method: "DELETE" })
         setFavorites((prev) => prev.filter((id) => id !== recipeId))
       } else {
-        await fetch(`/api/users/${user.id}/favorites`, {
+        await fetch(`${API_URL}/api/users/${user.id}/favorites`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ recipeId }),
