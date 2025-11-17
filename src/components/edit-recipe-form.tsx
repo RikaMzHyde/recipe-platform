@@ -123,7 +123,7 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
         const uploadFormData = new FormData()
         uploadFormData.append("image", imageFile)
 
-        const uploadResponse = await fetch("/api/upload", {
+        const uploadResponse = await fetch(`${API_URL}/api/upload`, {
           method: "POST",
           body: uploadFormData,
         })

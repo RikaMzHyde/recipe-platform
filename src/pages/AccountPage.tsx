@@ -351,7 +351,7 @@ export default function AccountPage() {
       const formData = new FormData()
       formData.append("image", blob, "avatar.jpg")
 
-      const uploadRes = await fetch("/api/upload", {
+      const uploadRes = await fetch(`${API_URL}/api/upload`, {
         method: "POST",
         body: formData,
       })

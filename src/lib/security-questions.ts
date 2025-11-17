@@ -1,3 +1,5 @@
+import { API_URL } from "@/lib/api"
+
 // Obtener preguntas de seguridad desde la API
 export interface SecurityQuestion {
   id: number
@@ -21,7 +23,7 @@ const FALLBACK_QUESTIONS: SecurityQuestion[] = [
 // Obtener preguntas desde el backend
 export async function fetchSecurityQuestions(): Promise<SecurityQuestion[]> {
   try {
-    const res = await fetch('/api/auth/security-questions')
+    const res = await fetch(`${API_URL}/api/auth/security-questions`)
     if (!res.ok) {
       console.warn('API no disponible, usando preguntas de respaldo')
       return FALLBACK_QUESTIONS
