@@ -155,6 +155,18 @@ export default function RecipeDetailPage() {
     }
   }
 
+  const formatCommentDate = (iso: string) => {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return ""
+    return d.toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -388,7 +400,20 @@ export default function RecipeDetailPage() {
                         )}
                       </Avatar>
                       <div className="text-sm">
-                        <div className="font-medium leading-none">{c.userName}</div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/user/${c.userId}`)}
+                            className="font-medium leading-none hover:underline hover:underline-offset-4"
+                          >
+                            {c.userName}
+                          </button>
+                          {c.createdAt && (
+                            <span className="text-xs text-muted-foreground">
+                              {formatCommentDate(c.createdAt)}
+                            </span>
+                          )}
+                        </div>
                         <div className="text-muted-foreground">{c.content}</div>
                       </div>
                     </div>
