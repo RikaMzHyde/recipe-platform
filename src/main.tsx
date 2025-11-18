@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import '@/pages/globals.css'
 import { Layout } from '@/components/layout'
 import { ThemeProvider } from '@/contexts/theme-context'
+import { AuthProvider } from '@/contexts/auth-context'
 
 import HomePage from '@/pages/HomePage'
 import FavoritesPage from '@/pages/FavoritesPage'
@@ -27,7 +28,9 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </ThemeProvider>
   </React.StrictMode>,
 )

@@ -5,20 +5,17 @@ import { RecipeCard } from "@/components/recipe-card"
 import { Button } from "@/components/ui/button"
 import { Heart } from "lucide-react"
 import type { Recipe } from "@/lib/recipes"
-import { getUser } from "@/lib/auth"
+import { useAuth } from "@/contexts/auth-context"
 import { API_URL } from "@/lib/api"
 
 export default function FavoritesPage() {
   const navigate = useNavigate()
-  const [user, setUser] = useState(getUser())
+  const { user } = useAuth()
   const [favorites, setFavorites] = useState<string[]>([])
   const [favoriteRecipes, setFavoriteRecipes] = useState<Recipe[]>([])
 
   useEffect(() => {
-    const currentUser = getUser()
-    setUser(currentUser)
-
-    if (!currentUser) {
+    if (!user) {
       navigate("/")
       return
     }
@@ -26,7 +23,7 @@ export default function FavoritesPage() {
     ;(async () => {
       try {
         // 1) Obtener IDs de favoritos del usuario
-        const favRes = await fetch(`${API_URL}/api/users/${currentUser.id}/favorites`)
+        const favRes = await fetch(`${API_URL}/api/users/${user.id}/favorites`)
         if (!favRes.ok) throw new Error("Error al cargar favoritos")
         const favData: { userId: string; recipeId: string }[] = await favRes.json()
         const favoriteIds = favData.map((f) => f.recipeId)
@@ -41,7 +38,7 @@ export default function FavoritesPage() {
         console.error(e)
       }
     })()
-  }, [navigate])
+  }, [navigate, user])
 
   const handleFavoriteToggle = async (recipeId: string) => {
     if (!user) return

@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react"
 import { Navbar } from "@/components/navbar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getUser, type User } from "@/lib/auth"
+import { useAuth } from "@/contexts/auth-context"
 import type { Recipe } from "@/lib/recipes"
 import { MyRecipeCard } from "@/components/my-recipe-card"
 import { API_URL } from "@/lib/api"
 
 export default function MyRecipesPage() {
-  const [user] = useState<User | null>(() => getUser())
+  const { user } = useAuth()
   const [myRecipesIds, setMyRecipesIds] = useState<string[]>([])
   const [favorites, setFavorites] = useState<string[]>([])
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([])

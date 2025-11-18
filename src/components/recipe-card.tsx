@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Heart, Clock, Users, Star } from "lucide-react"
 import { API_URL } from "@/lib/api"
 import type { Recipe } from "@/lib/recipes"
-import { getUser } from "@/lib/auth"
+import { useAuth } from "@/contexts/auth-context"
 
 interface RecipeCardProps {
   recipe: Recipe
@@ -18,7 +18,7 @@ interface RecipeCardProps {
 }
 
 export function RecipeCard({ recipe, onFavoriteToggle, isFavorite = false }: RecipeCardProps) {
-  const [user, setUser] = useState(getUser())
+  const { user } = useAuth()
   const [favorite, setFavorite] = useState(isFavorite)
   const [avgRating, setAvgRating] = useState<number>(0)
   const [ratingCount, setRatingCount] = useState<number>(0)
@@ -29,7 +29,6 @@ export function RecipeCard({ recipe, onFavoriteToggle, isFavorite = false }: Rec
   }, [isFavorite])
 
   useEffect(() => {
-    setUser(getUser())
     ;(async () => {
       try {
         // promedio
@@ -40,9 +39,8 @@ export function RecipeCard({ recipe, onFavoriteToggle, isFavorite = false }: Rec
           setRatingCount(data.count)
         }
         // rating del usuario
-        const u = getUser()
-        if (u) {
-          const ur = await fetch(`${API_URL}/api/users/${u.id}/ratings/${recipe.id}`)
+        if (user) {
+          const ur = await fetch(`${API_URL}/api/users/${user.id}/ratings/${recipe.id}`)
           if (ur.ok) {
             const d: { rating: number | null } = await ur.json()
             setMyRating(d.rating)
@@ -50,7 +48,7 @@ export function RecipeCard({ recipe, onFavoriteToggle, isFavorite = false }: Rec
         }
       } catch {}
     })()
-  }, [])
+  }, [recipe.id, user])
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault()

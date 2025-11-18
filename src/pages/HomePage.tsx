@@ -5,7 +5,7 @@ import { RecipeCarousel } from "@/components/recipe-carousel"
 import { RecipeCard } from "@/components/recipe-card"
 import { RecipeSearch } from "@/components/recipe-search"
 import { fetchRecipes, fetchCategories, type Recipe, type Category } from "@/lib/recipes"
-import { getUser } from "@/lib/auth"
+import { useAuth } from "@/contexts/auth-context"
 import { API_URL } from "@/lib/api"
 
 export default function HomePage() {
@@ -16,6 +16,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [initialCategory, setInitialCategory] = useState<string>('')
   const [categories, setCategories] = useState<Category[]>([])
+  const { user } = useAuth()
 
   useEffect(() => {
     // Leer parámetro de categoría desde la URL
@@ -36,7 +37,6 @@ export default function HomePage() {
     loadCategories()
     
     // Cargar favoritos del usuario desde el backend
-    const user = getUser()
     if (user) {
       ;(async () => {
         try {
@@ -49,8 +49,10 @@ export default function HomePage() {
           console.error("Error al cargar favoritos:", e)
         }
       })()
+    } else {
+      setFavorites([])
     }
-  }, [searchParams])
+  }, [searchParams, user])
 
   const loadRecipes = async () => {
     setLoading(true)
@@ -117,7 +119,6 @@ export default function HomePage() {
   }
 
   const handleFavoriteToggle = async (recipeId: string) => {
-    const user = getUser()
     if (!user) {
       alert("Debes iniciar sesión para guardar favoritos")
       return

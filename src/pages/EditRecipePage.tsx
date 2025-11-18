@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { Navbar } from "@/components/navbar"
 import { EditRecipeForm } from "@/components/edit-recipe-form"
-import { getUser } from "@/lib/auth"
+import { useAuth } from "@/contexts/auth-context"
 import type { Recipe } from "@/lib/recipes"
 import { Card, CardContent } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
@@ -16,7 +16,7 @@ export default function EditRecipePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
-  const [user] = useState(() => getUser())
+  const { user } = useAuth()
 
   const showError = (message: string) => {
     setError(message)

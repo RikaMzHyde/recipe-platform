@@ -2,12 +2,12 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Navbar } from "@/components/navbar"
 import { CreateRecipeForm } from "@/components/create-recipe-form"
-import { getUser } from "@/lib/auth"
+import { useAuth } from "@/contexts/auth-context"
 
 export default function CreateRecipePage() {
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const user = getUser()
+  const { user } = useAuth()
 
   // Redirigir si no está autenticado
   if (!user) {

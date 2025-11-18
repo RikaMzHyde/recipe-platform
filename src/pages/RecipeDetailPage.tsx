@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Heart, Clock, Users, ChefHat, Flame, Star, Pencil } from "lucide-react"
-import { getUser } from "@/lib/auth"
+import { useAuth } from "@/contexts/auth-context"
 import { type Recipe } from "@/lib/recipes"
 import { API_URL } from "@/lib/api"
 
@@ -18,7 +18,7 @@ export default function RecipeDetailPage() {
   
   const [recipe, setRecipe] = useState<Recipe | null>(null)
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState(getUser())
+  const { user } = useAuth()
   const [isFavorite, setIsFavorite] = useState(false)
   const [comments, setComments] = useState<Array<{ id: string; content: string; createdAt: string; userId: string; userName: string; userAvatar: string | null }>>([])
   const [commentText, setCommentText] = useState("")
@@ -28,8 +28,6 @@ export default function RecipeDetailPage() {
   const [myRating, setMyRating] = useState<number | null>(null)
 
   useEffect(() => {
-    setUser(getUser())
-    
     // Cargar receta y datos relacionados
     ;(async () => {
       try {
@@ -59,15 +57,14 @@ export default function RecipeDetailPage() {
           setRatingCount(d.count)
         }
         // cargar rating del usuario y favoritos
-        const u = getUser()
-        if (u) {
-          const ur = await fetch(`${API_URL}/api/users/${u.id}/ratings/${recipeId}`)
+        if (user) {
+          const ur = await fetch(`${API_URL}/api/users/${user.id}/ratings/${recipeId}`)
           if (ur.ok) {
             const x: { rating: number | null } = await ur.json()
             setMyRating(x.rating)
           }
           // Cargar favoritos del usuario
-          const favRes = await fetch(`${API_URL}/api/users/${u.id}/favorites`)
+          const favRes = await fetch(`${API_URL}/api/users/${user.id}/favorites`)
           if (favRes.ok) {
             const favData: { userId: string; recipeId: string }[] = await favRes.json()
             const favoriteIds = favData.map((f) => f.recipeId)
@@ -80,7 +77,7 @@ export default function RecipeDetailPage() {
         setLoading(false)
       }
     })()
-  }, [recipeId])
+  }, [recipeId, user])
 
   const handleFavoriteToggle = async () => {
     if (!user) {

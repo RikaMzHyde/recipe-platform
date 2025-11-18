@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { setUser } from "@/lib/auth"
+import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
 import { fetchSecurityQuestions, getRandomSecurityQuestion, type SecurityQuestion } from "@/lib/security-questions"
 import { API_URL } from "@/lib/api"
@@ -44,6 +44,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
   const [resetStep, setResetStep] = useState<"email" | "question">("email")
 
   const { toast } = useToast()
+  const { login } = useAuth()
 
   // Cargar preguntas de seguridad al montar el componente
   useEffect(() => {
@@ -93,7 +94,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
         return
       }
       const user = await res.json()
-      setUser(user)
+      login(user)
       onSuccess()
       onOpenChange(false)
       setLoginEmail("")
@@ -142,7 +143,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
         return
       }
       const user = await res.json()
-      setUser(user)
+      login(user)
       onSuccess()
       onOpenChange(false)
       setRegisterName("")
@@ -230,7 +231,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
       }
 
       const user = await loginRes.json()
-      setUser(user)
+      login(user)
 
       // Notificar éxito global (dejamos el diálogo abierto)
       onSuccess()

@@ -6,13 +6,13 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { getUser, setUser, type User } from "@/lib/auth"
+import { useAuth } from "@/contexts/auth-context"
 import type { Recipe } from "@/lib/recipes"
 import Cropper, { type Area } from "react-easy-crop"
 import { API_URL } from "@/lib/api"
 
 export default function AccountPage() {
-  const [user, setUserState] = useState<User | null>(null)
+  const { user, updateUser } = useAuth()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
 
@@ -46,13 +46,14 @@ export default function AccountPage() {
   const [isCropOpen, setIsCropOpen] = useState(false)
 
   useEffect(() => {
-    const u = getUser()
-    setUserState(u)
-    if (u) {
-      setName(u.name)
-      setEmail(u.email)
-      setAvatarUrl(u.avatarUrl || "")
-    }
+    if (!user) return
+
+    setName(user.name)
+    setEmail(user.email)
+    setAvatarUrl(user.avatarUrl || "")
+
+    const currentUserId = user.id
+
     ;(async () => {
       try {
         // Cargar recetas disponibles
@@ -61,24 +62,22 @@ export default function AccountPage() {
         const recData: Recipe[] = await recRes.json()
         setAllRecipes(recData)
 
-        if (u) {
-          // Mis recetas
-          const mineRes = await fetch(`${API_URL}/api/users/${u.id}/recipes`)
-          if (!mineRes.ok) throw new Error("Error al cargar mis recetas")
-          const mineData: Recipe[] = await mineRes.json()
-          setMyRecipesIds(mineData.map((m) => m.id))
+        // Mis recetas
+        const mineRes = await fetch(`${API_URL}/api/users/${currentUserId}/recipes`)
+        if (!mineRes.ok) throw new Error("Error al cargar mis recetas")
+        const mineData: Recipe[] = await mineRes.json()
+        setMyRecipesIds(mineData.map((m) => m.id))
 
-          // Favoritos (para pintar corazones)
-          const favRes = await fetch(`${API_URL}/api/users/${u.id}/favorites`)
-          if (!favRes.ok) throw new Error("Error al cargar favoritos")
-          const favData: { userId: string; recipeId: string }[] = await favRes.json()
-          setFavorites(favData.map((f) => f.recipeId))
-        }
+        // Favoritos (para pintar corazones)
+        const favRes = await fetch(`${API_URL}/api/users/${currentUserId}/favorites`)
+        if (!favRes.ok) throw new Error("Error al cargar favoritos")
+        const favData: { userId: string; recipeId: string }[] = await favRes.json()
+        setFavorites(favData.map((f) => f.recipeId))
       } catch (e) {
         console.error(e)
       }
     })()
-  }, [])
+  }, [user])
 
   const onCropComplete = useCallback((_croppedArea: Area, croppedPixels: Area) => {
     setCroppedAreaPixels(croppedPixels)
@@ -103,6 +102,7 @@ export default function AccountPage() {
   }
 
   const handleSaveProfile = async () => {
+    if (!user) return
     if (!name || !name.trim()) {
       setStatusMsg("Por favor, completa el nombre")
       setStatusMsgType("error")
@@ -126,10 +126,8 @@ export default function AccountPage() {
       }
       
       const updatedUser = await res.json()
-      const updated: User = { ...user, name: updatedUser.name, avatarUrl: updatedUser.avatarUrl }
-      setUser(updated)
-      setUserState(updated)
-      setAvatarUrl(updated.avatarUrl || "")
+      updateUser({ name: updatedUser.name, avatarUrl: updatedUser.avatarUrl })
+      setAvatarUrl(updatedUser.avatarUrl || "")
       setStatusMsg("Datos guardados correctamente")
       setStatusMsgType("success")
       setTimeout(() => setStatusMsg(""), 2000)
@@ -141,6 +139,7 @@ export default function AccountPage() {
   }
 
   const handleChangePassword = async () => {
+    if (!user) return
     if (!currentPassword) {
       setPasswordMsg("Por favor, ingresa tu contraseña actual")
       setPasswordMsgType("error")
@@ -382,10 +381,8 @@ export default function AccountPage() {
       }
 
       const updatedUser = await res.json()
-      const updated: User = { ...user, name: updatedUser.name, avatarUrl: updatedUser.avatarUrl }
-      setUser(updated)
-      setUserState(updated)
-      setAvatarUrl(updated.avatarUrl || "")
+      updateUser({ name: updatedUser.name, avatarUrl: updatedUser.avatarUrl })
+      setAvatarUrl(updatedUser.avatarUrl || "")
       setStatusMsg("Foto de perfil actualizada")
       setStatusMsgType("success")
       setTimeout(() => setStatusMsg(""), 2000)

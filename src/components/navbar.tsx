@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { AuthDialog } from "@/components/auth-dialog"
-import { getUser, logout, type User } from "@/lib/auth"
+import { useAuth } from "@/contexts/auth-context"
 import { ChefHat, Heart, LogOut, UserIcon, Plus } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
@@ -19,23 +19,18 @@ import { ThemeToggle } from "@/components/theme-toggle"
 
 export function Navbar() {
   const navigate = useNavigate()
-  const [user, setUser] = useState<User | null>(null)
+  const { user, logout } = useAuth()
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
   const { toast } = useToast()
 
-  useEffect(() => {
-    setUser(getUser())
-  }, [])
-
   const handleLogout = () => {
     logout()
-    setUser(null)
     // Recargar la página para limpiar el estado de favoritos
     window.location.href = "/"
   }
 
   const handleAuthSuccess = () => {
-    setUser(getUser())
+    // El estado de usuario se actualiza desde AuthProvider
   }
 
   return (
