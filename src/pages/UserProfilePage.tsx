@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { RecipeCard } from "@/components/recipe-card"
 import type { Recipe } from "@/lib/recipes"
 import { API_URL } from "@/lib/api"
+import { useAuth } from "@/contexts/auth-context"
 
 interface PublicUser {
   id: string
@@ -15,10 +16,12 @@ interface PublicUser {
 
 export default function UserProfilePage() {
   const { id } = useParams<{ id: string }>()
+  const { user: authUser } = useAuth()
   const [user, setUser] = useState<PublicUser | null>(null)
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [favorites, setFavorites] = useState<string[]>([])
 
   useEffect(() => {
     if (!id) return
@@ -50,6 +53,21 @@ export default function UserProfilePage() {
             setUser({ id, name: first.userName, avatarUrl: first.userAvatar })
           }
         }
+
+        // Cargar favoritos del usuario autenticado para pintar corazones
+        if (authUser) {
+          try {
+            const favRes = await fetch(`${API_URL}/api/users/${authUser.id}/favorites`)
+            if (favRes.ok) {
+              const favData: { userId: string; recipeId: string }[] = await favRes.json()
+              setFavorites(favData.map((f) => f.recipeId))
+            }
+          } catch (e) {
+            console.error(e)
+          }
+        } else {
+          setFavorites([])
+        }
       } catch (e) {
         console.error(e)
         setError("No se pudo cargar la información de este usuario")
@@ -59,7 +77,30 @@ export default function UserProfilePage() {
     }
 
     load()
-  }, [id])
+  }, [id, authUser])
+
+  const handleFavoriteToggle = async (recipeId: string) => {
+    if (!authUser) {
+      alert("Debes iniciar sesión para guardar favoritos")
+      return
+    }
+
+    try {
+      if (favorites.includes(recipeId)) {
+        await fetch(`${API_URL}/api/users/${authUser.id}/favorites/${recipeId}`, { method: "DELETE" })
+        setFavorites((prev) => prev.filter((id) => id !== recipeId))
+      } else {
+        await fetch(`${API_URL}/api/users/${authUser.id}/favorites`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recipeId }),
+        })
+        setFavorites((prev) => [...prev, recipeId])
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
 
   const title = user?.name || "Usuario"
 
@@ -100,7 +141,13 @@ export default function UserProfilePage() {
             <h2 className="text-xl font-semibold">Recetas de {title}</h2>
             <div className="grid [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))] gap-6">
               {recipes.map((recipe) => (
-                <RecipeCard key={recipe.id} recipe={recipe} hideAuthor />
+                <RecipeCard
+                  key={recipe.id}
+                  recipe={recipe}
+                  hideAuthor
+                  onFavoriteToggle={handleFavoriteToggle}
+                  isFavorite={favorites.includes(recipe.id)}
+                />
               ))}
             </div>
           </section>
