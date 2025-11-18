@@ -58,7 +58,7 @@ export function MyRecipeCard({ recipe, onDelete, onFavoriteToggle, isFavorite = 
   const handleConfirmDelete = async () => {
     setIsDeleting(true)
     try {
-      const res = await fetch(`${API_URL}/recipes/${recipe.id}`, {
+      const res = await fetch(`${API_URL}/api/recipes/${recipe.id}`, {
         method: "DELETE",
       })
       if (res.ok) {

@@ -34,7 +34,7 @@ export default function EditRecipePage() {
 
     const loadRecipe = async () => {
       try {
-        const response = await fetch(`${API_URL}/recipes/${id}`)
+        const response = await fetch(`${API_URL}/api/recipes/${id}`)
         if (!response.ok) throw new Error("Error al cargar la receta")
         const data: Recipe = await response.json()
         

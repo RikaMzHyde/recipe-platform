@@ -167,7 +167,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
     setError("")
     
     try {
-      const res = await fetch(`${API_URL}/auth/security-question?email=${encodeURIComponent(resetEmail)}`)
+      const res = await fetch(`${API_URL}/api/auth/security-question?email=${encodeURIComponent(resetEmail)}`)
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: "Error al verificar email" }))
         showError(err.error || "Email no registrado")

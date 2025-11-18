@@ -56,20 +56,20 @@ export default function AccountPage() {
     ;(async () => {
       try {
         // Cargar recetas disponibles
-        const recRes = await fetch(`${API_URL}/recipes`)
+        const recRes = await fetch(`${API_URL}/api/recipes`)
         if (!recRes.ok) throw new Error("Error al cargar recetas")
         const recData: Recipe[] = await recRes.json()
         setAllRecipes(recData)
 
         if (u) {
           // Mis recetas
-          const mineRes = await fetch(`${API_URL}/users/${u.id}/recipes`)
+          const mineRes = await fetch(`${API_URL}/api/users/${u.id}/recipes`)
           if (!mineRes.ok) throw new Error("Error al cargar mis recetas")
           const mineData: Recipe[] = await mineRes.json()
           setMyRecipesIds(mineData.map((m) => m.id))
 
           // Favoritos (para pintar corazones)
-          const favRes = await fetch(`${API_URL}/users/${u.id}/favorites`)
+          const favRes = await fetch(`${API_URL}/api/users/${u.id}/favorites`)
           if (!favRes.ok) throw new Error("Error al cargar favoritos")
           const favData: { userId: string; recipeId: string }[] = await favRes.json()
           setFavorites(favData.map((f) => f.recipeId))
@@ -111,7 +111,7 @@ export default function AccountPage() {
     }
     
     try {
-      const res = await fetch(`${API_URL}/users/${user.id}`, {
+      const res = await fetch(`${API_URL}/api/users/${user.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: name.trim() }),
@@ -161,7 +161,7 @@ export default function AccountPage() {
     }
 
     try {
-      const res = await fetch(`${API_URL}/users/${user.id}/password`, {
+      const res = await fetch(`${API_URL}/api/users/${user.id}/password`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -197,10 +197,10 @@ export default function AccountPage() {
     if (!user) return
     try {
       if (favorites.includes(recipeId)) {
-        await fetch(`${API_URL}/users/${user.id}/favorites/${recipeId}`, { method: "DELETE" })
+        await fetch(`${API_URL}/api/users/${user.id}/favorites/${recipeId}`, { method: "DELETE" })
         setFavorites((prev) => prev.filter((id) => id !== recipeId))
       } else {
-        await fetch(`${API_URL}/users/${user.id}/favorites`, {
+        await fetch(`${API_URL}/api/users/${user.id}/favorites`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ recipeId }),
@@ -230,7 +230,7 @@ export default function AccountPage() {
     if (!title.trim()) return
     setCreating(true)
     try {
-      const res = await fetch(`${API_URL}/recipes`, {
+      const res = await fetch(`${API_URL}/api/recipes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -250,7 +250,7 @@ export default function AccountPage() {
       if (!res.ok) throw new Error("No se pudo crear la receta")
       const newRecipe: Recipe = await res.json()
       setAllRecipes((prev) => [newRecipe, ...prev])
-      await fetch(`${API_URL}/users/${user.id}/my-recipes`, {
+      await fetch(`${API_URL}/api/users/${user.id}/my-recipes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ recipeId: newRecipe.id }),
@@ -367,7 +367,7 @@ export default function AccountPage() {
       const uploadData = (await uploadRes.json()) as { url: string }
       const newAvatarUrl = uploadData.url
 
-      const res = await fetch(`${API_URL}/users/${user.id}`, {
+      const res = await fetch(`${API_URL}/api/users/${user.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: name.trim(), avatarUrl: newAvatarUrl }),

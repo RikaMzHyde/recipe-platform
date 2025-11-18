@@ -148,7 +148,7 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
       }
 
       // Actualizar receta
-      const response = await fetch(`${API_URL}/recipes/${recipe.id}`, {
+      const response = await fetch(`${API_URL}/api/recipes/${recipe.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updateData),
