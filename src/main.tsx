@@ -14,6 +14,7 @@ import EditRecipePage from '@/pages/EditRecipePage'
 import AccountPage from '@/pages/AccountPage'
 import CreateRecipePage from '@/pages/CreateRecipePage'
 import MyRecipesPage from '@/pages/MyRecipesPage'
+import UserProfilePage from '@/pages/UserProfilePage'
 
 // Definimos las rutas principales de la aplicación (cada una envuelta en el Layout común)
 const router = createBrowserRouter([
@@ -21,6 +22,7 @@ const router = createBrowserRouter([
   { path: '/favorites', element: <Layout><FavoritesPage /></Layout> },
   { path: '/account', element: <Layout><AccountPage /></Layout> },
   { path: '/my-recipes', element: <Layout><MyRecipesPage /></Layout> },
+  { path: '/user/:id', element: <Layout><UserProfilePage /></Layout> },
   { path: '/recipe/:id', element: <Layout><RecipeDetailPage /></Layout> },
   { path: '/recipe/:id/edit', element: <Layout><EditRecipePage /></Layout> },
   { path: '/create-recipe', element: <Layout><CreateRecipePage /></Layout> },

@@ -255,15 +255,19 @@ export default function RecipeDetailPage() {
               )}
             </div>
 
-            <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate(`/user/${recipe.userId}`)}
+              className="flex items-center gap-3 text-left hover:underline hover:underline-offset-4"
+            >
               <Avatar className="h-12 w-12">
                 <AvatarImage src={recipe.userAvatar || "/placeholder.svg"} alt={recipe.userName} />
-                <AvatarFallback>{recipe.userName[0]}</AvatarFallback>
+                <AvatarFallback>{recipe.userName?.charAt(0) || "?"}</AvatarFallback>
               </Avatar>
               <div>
                 <p className="font-medium">Receta de {recipe.userName}</p>
               </div>
-            </div>
+            </button>
 
             <Separator />
 
@@ -380,7 +384,7 @@ export default function RecipeDetailPage() {
                         {c.userAvatar ? (
                           <AvatarImage src={c.userAvatar} alt={c.userName} />
                         ) : (
-                          <AvatarFallback>{c.userName[0]}</AvatarFallback>
+                          <AvatarFallback>{c.userName?.charAt(0) || "?"}</AvatarFallback>
                         )}
                       </Avatar>
                       <div className="text-sm">

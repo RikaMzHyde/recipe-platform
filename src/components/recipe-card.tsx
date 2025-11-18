@@ -1,7 +1,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -15,10 +15,12 @@ interface RecipeCardProps {
   recipe: Recipe
   onFavoriteToggle?: (recipeId: string) => void
   isFavorite?: boolean
+  hideAuthor?: boolean
 }
 
-export function RecipeCard({ recipe, onFavoriteToggle, isFavorite = false }: RecipeCardProps) {
+export function RecipeCard({ recipe, onFavoriteToggle, isFavorite = false, hideAuthor = false }: RecipeCardProps) {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [favorite, setFavorite] = useState(isFavorite)
   const [avgRating, setAvgRating] = useState<number>(0)
   const [ratingCount, setRatingCount] = useState<number>(0)
@@ -138,15 +140,25 @@ export function RecipeCard({ recipe, onFavoriteToggle, isFavorite = false }: Rec
             </div>
           </div>
         </CardContent>
-        <CardFooter className="p-4 pt-0">
-          <div className="flex items-center gap-2">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={recipe.userAvatar || "/placeholder.svg"} alt={recipe.userName} />
-              <AvatarFallback>{recipe.userName[0]}</AvatarFallback>
-            </Avatar>
-            <span className="text-sm text-muted-foreground">{recipe.userName}</span>
-          </div>
-        </CardFooter>
+        {!hideAuthor && (
+          <CardFooter className="p-4 pt-0">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                navigate(`/user/${recipe.userId}`)
+              }}
+              className="flex items-center gap-2 hover:underline hover:underline-offset-4 text-left"
+            >
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={recipe.userAvatar || "/placeholder.svg"} alt={recipe.userName} />
+                <AvatarFallback>{recipe.userName?.charAt(0) || "?"}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm text-muted-foreground">{recipe.userName}</span>
+            </button>
+          </CardFooter>
+        )}
       </Card>
     </Link>
   )
