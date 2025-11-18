@@ -34,6 +34,9 @@ export function Footer() {
                 <Link to="/favorites" className="text-muted-foreground hover:text-foreground">Favoritos</Link>
               </li>
               <li>
+                <Link to="/my-recipes" className="text-muted-foreground hover:text-foreground">Mis recetas</Link>
+              </li>
+              <li>
                 <Link to="/create-recipe" className="text-muted-foreground hover:text-foreground">Crear receta</Link>
               </li>
               <li>
@@ -46,16 +49,16 @@ export function Footer() {
             <h3 className="text-sm font-semibold tracking-wide">Soporte</h3>
             <ul className="mt-4 space-y-2 text-sm">
               <li>
-                <Link to="/help" className="text-muted-foreground hover:text-foreground">Centro de ayuda</Link>
+                <a href="#" className="text-muted-foreground hover:text-foreground">Centro de ayuda</a>
               </li>
               <li>
-                <Link to="/contact" className="text-muted-foreground hover:text-foreground">Contacto</Link>
+                <a href="#" className="text-muted-foreground hover:text-foreground">Contacto</a>
               </li>
               <li>
-                <Link to="/faq" className="text-muted-foreground hover:text-foreground">Preguntas frecuentes</Link>
+                <a href="#" className="text-muted-foreground hover:text-foreground">Preguntas frecuentes</a>
               </li>
               <li>
-                <Link to="/report" className="text-muted-foreground hover:text-foreground">Reportar problema</Link>
+                <a href="#" className="text-muted-foreground hover:text-foreground">Reportar problema</a>
               </li>
             </ul>
           </div>
@@ -103,9 +106,9 @@ export function Footer() {
         <div className="mt-10 border-t border-border/40 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">© {year} Kokumi. Todos los derechos reservados.</p>
           <div className="flex items-center gap-4 text-xs">
-            <Link to="/legal/privacidad" className="text-muted-foreground hover:text-foreground">Privacidad</Link>
-            <Link to="/legal/terminos" className="text-muted-foreground hover:text-foreground">Términos</Link>
-            <Link to="/legal/cookies" className="text-muted-foreground hover:text-foreground">Cookies</Link>
+            <a href="#" className="text-muted-foreground hover:text-foreground">Privacidad</a>
+            <a href="#" className="text-muted-foreground hover:text-foreground">Términos</a>
+            <a href="#" className="text-muted-foreground hover:text-foreground">Cookies</a>
           </div>
         </div>
       </div>
