@@ -19,7 +19,9 @@ import { ThemeToggle } from "@/components/theme-toggle"
 
 export function Navbar() {
   const navigate = useNavigate()
+  // Obtenemos del contexto global el usuario autenticado y la función para cerrar sesión
   const { user, logout } = useAuth()
+  // Estado local para controlar si el diálogo de login/registro está abierto
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
   const { toast } = useToast()
 
@@ -55,7 +57,7 @@ export function Navbar() {
 
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            
+            {/* Si hay usuario autenticado mostramos acceso directo a crear una receta */}
             {user && (
               <Button asChild variant="default" size="sm">
                 <Link to="/create-recipe" className="flex items-center gap-2">
@@ -64,7 +66,7 @@ export function Navbar() {
                 </Link>
               </Button>
             )}
-            
+            {/* Si hay sesión mostramos el menú de cuenta; si no, el botón para abrir AuthDialog */}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -114,6 +116,7 @@ export function Navbar() {
         </div>
       </nav>
 
+      {/* Diálogo de autenticación controlado por el estado local authDialogOpen */}
       <AuthDialog 
         open={authDialogOpen} 
         onOpenChange={setAuthDialogOpen} 

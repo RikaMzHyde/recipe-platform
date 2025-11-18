@@ -12,6 +12,7 @@ import Cropper, { type Area } from "react-easy-crop"
 import { API_URL } from "@/lib/api"
 
 export default function AccountPage() {
+  // user: datos de la sesión actual; updateUser: sincroniza cambios (nombre, avatar, etc.) en el contexto global
   const { user, updateUser } = useAuth()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -45,6 +46,7 @@ export default function AccountPage() {
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null)
   const [isCropOpen, setIsCropOpen] = useState(false)
 
+  // Cuando hay usuario cargamos sus datos de perfil y las recetas/favoritos asociados desde el backend
   useEffect(() => {
     if (!user) return
 
@@ -126,6 +128,7 @@ export default function AccountPage() {
       }
       
       const updatedUser = await res.json()
+      // Actualizamos el contexto global de autenticación para reflejar los nuevos datos del perfil
       updateUser({ name: updatedUser.name, avatarUrl: updatedUser.avatarUrl })
       setAvatarUrl(updatedUser.avatarUrl || "")
       setStatusMsg("Datos guardados correctamente")

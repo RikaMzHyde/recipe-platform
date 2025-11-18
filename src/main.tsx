@@ -15,6 +15,7 @@ import AccountPage from '@/pages/AccountPage'
 import CreateRecipePage from '@/pages/CreateRecipePage'
 import MyRecipesPage from '@/pages/MyRecipesPage'
 
+// Definimos las rutas principales de la aplicación (cada una envuelta en el Layout común)
 const router = createBrowserRouter([
   { path: '/', element: <Layout><HomePage /></Layout> },
   { path: '/favorites', element: <Layout><FavoritesPage /></Layout> },
@@ -27,8 +28,11 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
+    {/* Proveedor de tema (modo claro/oscuro) */}
     <ThemeProvider>
+      {/* Proveedor de autenticación: expone useAuth() al resto de componentes */}
       <AuthProvider>
+        {/* Inyecta el router con todas las páginas definidas arriba */}
         <RouterProvider router={router} />
       </AuthProvider>
     </ThemeProvider>

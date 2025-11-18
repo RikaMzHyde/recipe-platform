@@ -44,6 +44,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
   const [resetStep, setResetStep] = useState<"email" | "question">("email")
 
   const { toast } = useToast()
+  // login() actualizará el usuario en el AuthProvider cuando el backend devuelva credenciales válidas
   const { login } = useAuth()
 
   // Cargar preguntas de seguridad al montar el componente
@@ -94,6 +95,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
         return
       }
       const user = await res.json()
+      // Guardamos el usuario en el contexto global de autenticación
       login(user)
       onSuccess()
       onOpenChange(false)
@@ -143,6 +145,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
         return
       }
       const user = await res.json()
+      // Guardamos el usuario en el contexto global de autenticación
       login(user)
       onSuccess()
       onOpenChange(false)
@@ -231,6 +234,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
       }
 
       const user = await loginRes.json()
+      // Tras cambiar la contraseña iniciamos sesión automáticamente en el contexto global
       login(user)
 
       // Notificar éxito global (dejamos el diálogo abierto)
