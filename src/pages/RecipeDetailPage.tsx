@@ -6,7 +6,17 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, Heart, Clock, Users, ChefHat, Flame, Star, Pencil } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { ArrowLeft, Heart, Clock, Users, ChefHat, Flame, Star, Pencil, Trash2 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { type Recipe } from "@/lib/recipes"
 import { API_URL } from "@/lib/api"
@@ -26,6 +36,9 @@ export default function RecipeDetailPage() {
   const [avgRating, setAvgRating] = useState<number>(0)
   const [ratingCount, setRatingCount] = useState<number>(0)
   const [myRating, setMyRating] = useState<number | null>(null)
+  const [deleteCommentDialogOpen, setDeleteCommentDialogOpen] = useState(false)
+  const [commentToDelete, setCommentToDelete] = useState<string | null>(null)
+  const [deletingComment, setDeletingComment] = useState(false)
 
   useEffect(() => {
     // Cargar receta y datos relacionados
@@ -122,12 +135,48 @@ export default function RecipeDetailPage() {
       if (!res.ok) return
       const created = await res.json()
       // Agregar nombre de usuario al comentario creado
-      setComments((prev) => [{ ...created, userName: user.name, userAvatar: null }, ...prev])
+      setComments((prev) => [
+        { ...created, userName: user.name, userAvatar: user.avatarUrl ?? null },
+        ...prev,
+      ])
       setCommentText("")
     } catch (e) {
       console.error(e)
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleDeleteComment = (commentId: string) => {
+    if (!user) {
+      alert("Debes iniciar sesión para borrar comentarios")
+      return
+    }
+
+    setCommentToDelete(commentId)
+    setDeleteCommentDialogOpen(true)
+  }
+
+  const handleConfirmDeleteComment = async () => {
+    if (!user || !commentToDelete) return
+
+    setDeletingComment(true)
+    try {
+      const res = await fetch(
+        `${API_URL}/api/recipes/${recipeId}/comments/${commentToDelete}?userId=${user.id}`,
+        { method: "DELETE" },
+      )
+      if (!res.ok) {
+        alert("Error al borrar el comentario")
+        return
+      }
+      setComments((prev) => prev.filter((c) => c.id !== commentToDelete))
+      setDeleteCommentDialogOpen(false)
+      setCommentToDelete(null)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setDeletingComment(false)
     }
   }
 
@@ -399,7 +448,7 @@ export default function RecipeDetailPage() {
                           <AvatarFallback>{c.userName?.charAt(0) || "?"}</AvatarFallback>
                         )}
                       </Avatar>
-                      <div className="text-sm">
+                      <div className="text-sm flex-1">
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
@@ -412,6 +461,16 @@ export default function RecipeDetailPage() {
                             <span className="text-xs text-muted-foreground">
                               {formatCommentDate(c.createdAt)}
                             </span>
+                          )}
+                          {user && c.userId === user.id && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteComment(c.id)}
+                              className="ml-1 text-xs text-destructive hover:text-destructive/80"
+                              aria-label="Eliminar comentario"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           )}
                         </div>
                         <div className="text-muted-foreground">{c.content}</div>
@@ -440,6 +499,35 @@ export default function RecipeDetailPage() {
             </CardContent>
           </Card>
         </div>
+
+        <AlertDialog
+          open={deleteCommentDialogOpen}
+          onOpenChange={(open) => {
+            setDeleteCommentDialogOpen(open)
+            if (!open) {
+              setCommentToDelete(null)
+            }
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción no se puede deshacer. Se eliminará permanentemente este comentario.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deletingComment}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmDeleteComment}
+                disabled={deletingComment}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deletingComment ? "Eliminando..." : "Eliminar"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   )
