@@ -1,3 +1,5 @@
+// Página de perfil de usuario: muestra la información pública del usuario y sus recetas
+
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { Navbar } from "@/components/navbar"
@@ -8,6 +10,7 @@ import type { Recipe } from "@/lib/recipes"
 import { API_URL } from "@/lib/api"
 import { useAuth } from "@/contexts/auth-context"
 
+// Forma del objeto para indicar las propiedades que debe tener
 interface PublicUser {
   id: string
   name: string
@@ -15,14 +18,21 @@ interface PublicUser {
 }
 
 export default function UserProfilePage() {
+  // Obtener ID usaurio por URL
   const { id } = useParams<{ id: string }>()
+  // Usuario autenticado para saber si puede marcar favs
   const { user: authUser } = useAuth()
+  // Estado del perfil público
   const [user, setUser] = useState<PublicUser | null>(null)
+  // Recetas creadas por el usuario
   const [recipes, setRecipes] = useState<Recipe[]>([])
+  // Estados de carga y error para feedback al usuario
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // Favoritos del usuario autenticado
   const [favorites, setFavorites] = useState<string[]>([])
 
+  // Cargar info del perfil y recetas
   useEffect(() => {
     if (!id) return
 
@@ -31,13 +41,13 @@ export default function UserProfilePage() {
       setError(null)
 
       try {
-        // Cargar recetas del usuario
+        // Traer recetas del usuario
         const recRes = await fetch(`${API_URL}/api/users/${id}/recipes`)
         if (!recRes.ok) throw new Error("Error al cargar las recetas del usuario")
         const userRecipes: Recipe[] = await recRes.json()
         setRecipes(userRecipes)
 
-        // Intentar cargar datos públicos del usuario (sin email, por privacidad)
+        // Intentar cargar datos públicos del usuario, sino usamos datos que vienen de las recetas
         try {
           const userRes = await fetch(`${API_URL}/api/users/${id}`)
           if (userRes.ok) {
@@ -48,13 +58,14 @@ export default function UserProfilePage() {
             setUser({ id, name: first.userName, avatarUrl: first.userAvatar })
           }
         } catch {
+          // Respaldo si el endpoint público falla
           if (userRecipes.length > 0) {
             const first = userRecipes[0]
             setUser({ id, name: first.userName, avatarUrl: first.userAvatar })
           }
         }
 
-        // Cargar favoritos del usuario autenticado para pintar corazones
+        // Cargar favoritos del usuario autenticado para pintar corazones (si hay user iniciado sesión)
         if (authUser) {
           try {
             const favRes = await fetch(`${API_URL}/api/users/${authUser.id}/favorites`)
@@ -79,6 +90,7 @@ export default function UserProfilePage() {
     load()
   }, [id, authUser])
 
+  // Función para marcar/desmarcar favoritos
   const handleFavoriteToggle = async (recipeId: string) => {
     if (!authUser) {
       alert("Debes iniciar sesión para guardar favoritos")
@@ -86,9 +98,11 @@ export default function UserProfilePage() {
     }
 
     try {
+      // Si ya es fav, lo elimina
       if (favorites.includes(recipeId)) {
         await fetch(`${API_URL}/api/users/${authUser.id}/favorites/${recipeId}`, { method: "DELETE" })
         setFavorites((prev) => prev.filter((id) => id !== recipeId))
+      // Sino, lo añade
       } else {
         await fetch(`${API_URL}/api/users/${authUser.id}/favorites`, {
           method: "POST",
@@ -102,13 +116,16 @@ export default function UserProfilePage() {
     }
   }
 
+  // Nombre de usuario
   const title = user?.name || "Usuario"
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
+      {/* Contenedor principal */}
       <main className="container px-3 sm:px-4 md:px-6 lg:px-10 max-w-none mx-auto w-full py-8 space-y-8">
+        {/* Tarjeta de perfil de user */}
         <Card className="max-w-3xl mx-auto">
           <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -136,6 +153,7 @@ export default function UserProfilePage() {
           </CardContent>
         </Card>
 
+        {/* Lsita de recetas si no ha habido problemas */}
         {!loading && !error && recipes.length > 0 && (
           <section className="space-y-4">
             <h2 className="text-xl font-semibold">Recetas de {title}</h2>

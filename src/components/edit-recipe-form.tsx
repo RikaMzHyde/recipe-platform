@@ -10,6 +10,7 @@ import { fetchCategories, type Category, type Ingredient, type Recipe } from "@/
 import { useToast } from "@/hooks/use-toast"
 import { API_URL } from "@/lib/api"
 
+// Tipado de las props del formulario de edición
 interface EditRecipeFormProps {
   recipe: Recipe
   userId: string
@@ -18,10 +19,14 @@ interface EditRecipeFormProps {
   setIsSubmitting: (value: boolean) => void
 }
 
+// Componente principal del formulario 
 export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsSubmitting }: EditRecipeFormProps) {
+  // Lista de categorías para el select
   const [categories, setCategories] = useState<Category[]>([])
+  // Imagen seleccionada por el usuario
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(recipe.imageUrl)
+  // Lista editable de ingredientes. Si la receta no tiene ingredientes, se crea uno vacío
   const [ingredients, setIngredients] = useState<Ingredient[]>(
     recipe.ingredients && recipe.ingredients.length > 0 ? recipe.ingredients : [{ name: "", amount: "" }]
   )
@@ -37,7 +42,7 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
     })
   }
 
-  // Form fields inicializados con los datos de la receta
+  // Campos del formulario
   const [title, setTitle] = useState(recipe.title)
   const [description, setDescription] = useState(recipe.description || "")
   const [categoryId, setCategoryId] = useState<string>(recipe.categoryId?.toString() || "")
@@ -47,15 +52,18 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
   const [difficulty, setDifficulty] = useState<string>(recipe.difficulty || "")
   const [preparation, setPreparation] = useState(recipe.preparation || "")
 
+  // Cargar categorías al inicio
   useEffect(() => {
     loadCategories()
   }, [])
 
+  // Fetch de categorías
   const loadCategories = async () => {
     const cats = await fetchCategories()
     setCategories(cats)
   }
 
+  // Manejo del cambio de imagen
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -71,6 +79,7 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
         return
       }
 
+      // Guardamos archivo y limpiamos errores
       setImageFile(file)
       setError(null)
 
@@ -83,22 +92,26 @@ export function EditRecipeForm({ recipe, userId, onSuccess, isSubmitting, setIsS
     }
   }
 
+  // Añadir ingrediente vacío
   const addIngredient = () => {
     setIngredients([...ingredients, { name: "", amount: "" }])
   }
 
+  // Eliminar ingrediente por índice
   const removeIngredient = (index: number) => {
     if (ingredients.length > 1) {
       setIngredients(ingredients.filter((_, i) => i !== index))
     }
   }
 
+  // Modificar ingrediente
   const updateIngredient = (index: number, field: "name" | "amount", value: string) => {
     const newIngredients = [...ingredients]
     newIngredients[index][field] = value
     setIngredients(newIngredients)
   }
 
+  // Submit form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)

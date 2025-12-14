@@ -1,3 +1,5 @@
+// Página de perfil privado de usuario: le muestra al usuario su información
+
 import { useEffect, useState, useRef, useCallback, type ChangeEvent } from "react"
 import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
@@ -6,37 +8,29 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+// Importamos contexto de autenticación, donde obtenemos el usuario actual
 import { useAuth } from "@/contexts/auth-context"
-import type { Recipe } from "@/lib/recipes"
+// Cropper para recortar el avatar
 import Cropper, { type Area } from "react-easy-crop"
 import { API_URL } from "@/lib/api"
 
 export default function AccountPage() {
-  // user: datos de la sesión actual; updateUser: sincroniza cambios (nombre, avatar, etc.) en el contexto global
+  // Extraemos info del usuario logueado actualmente + función para actualizarlo globalmente y sincronizar los cambios
   const { user, updateUser } = useAuth()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
 
+  // Estados para cambiar el pw
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
 
-  const [myRecipesIds, setMyRecipesIds] = useState<string[]>([])
-  const [favorites, setFavorites] = useState<string[]>([])
-  const [allRecipes, setAllRecipes] = useState<Recipe[]>([])
+  // Mensajes de estado
   const [statusMsg, setStatusMsg] = useState<string>("")
   const [statusMsgType, setStatusMsgType] = useState<"success" | "error">("error")
   const [passwordMsg, setPasswordMsg] = useState<string>("")
   const [passwordMsgType, setPasswordMsgType] = useState<"success" | "error">("error")
-  const [creating, setCreating] = useState(false)
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [category, setCategory] = useState("")
-  const [imageUrl, setImageUrl] = useState("")
-  const [prepTime, setPrepTime] = useState("")
-  const [cookTime, setCookTime] = useState("")
-  const [servings, setServings] = useState<number | undefined>(undefined)
-  const [difficulty, setDifficulty] = useState("")
+  // Estados para avatar
   const [avatarUrl, setAvatarUrl] = useState<string>("")
   const [avatarUploading, setAvatarUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -46,45 +40,21 @@ export default function AccountPage() {
   const [cropImageUrl, setCropImageUrl] = useState<string | null>(null)
   const [isCropOpen, setIsCropOpen] = useState(false)
 
-  // Cuando hay usuario cargamos sus datos de perfil y las recetas/favoritos asociados desde el backend
+  // Cuando hay usuario cargamos sus datos de perfil
   useEffect(() => {
     if (!user) return
 
     setName(user.name)
     setEmail(user.email)
     setAvatarUrl(user.avatarUrl || "")
-
-    const currentUserId = user.id
-
-    ;(async () => {
-      try {
-        // Cargar recetas disponibles
-        const recRes = await fetch(`${API_URL}/api/recipes`)
-        if (!recRes.ok) throw new Error("Error al cargar recetas")
-        const recData: Recipe[] = await recRes.json()
-        setAllRecipes(recData)
-
-        // Mis recetas
-        const mineRes = await fetch(`${API_URL}/api/users/${currentUserId}/recipes`)
-        if (!mineRes.ok) throw new Error("Error al cargar mis recetas")
-        const mineData: Recipe[] = await mineRes.json()
-        setMyRecipesIds(mineData.map((m) => m.id))
-
-        // Favoritos (para pintar corazones)
-        const favRes = await fetch(`${API_URL}/api/users/${currentUserId}/favorites`)
-        if (!favRes.ok) throw new Error("Error al cargar favoritos")
-        const favData: { userId: string; recipeId: string }[] = await favRes.json()
-        setFavorites(favData.map((f) => f.recipeId))
-      } catch (e) {
-        console.error(e)
-      }
-    })()
   }, [user])
 
+  // Guardamos el área recortada del avatar
   const onCropComplete = useCallback((_croppedArea: Area, croppedPixels: Area) => {
     setCroppedAreaPixels(croppedPixels)
   }, [])
 
+  // Si el usuario no está logueado, bloqueamos acceso
   if (!user) {
     return (
       <div className="min-h-screen bg-background">
@@ -103,6 +73,7 @@ export default function AccountPage() {
     )
   }
 
+  // Guardar cambios básicos del perfil
   const handleSaveProfile = async () => {
     if (!user) return
     if (!name || !name.trim()) {
@@ -113,6 +84,7 @@ export default function AccountPage() {
     }
     
     try {
+      // Actualización de nombre
       const res = await fetch(`${API_URL}/api/users/${user.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -141,6 +113,7 @@ export default function AccountPage() {
     }
   }
 
+  // Cambio de pw
   const handleChangePassword = async () => {
     if (!user) return
     if (!currentPassword) {
@@ -180,6 +153,7 @@ export default function AccountPage() {
         return
       }
 
+      // Limpiamos campos y mostramos mensaje de éxito
       setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
@@ -193,92 +167,7 @@ export default function AccountPage() {
     }
   }
 
-  const myRecipes = allRecipes.filter((r) => myRecipesIds.includes(r.id))
-
-  const toggleFavorite = async (recipeId: string) => {
-    if (!user) return
-    try {
-      if (favorites.includes(recipeId)) {
-        await fetch(`${API_URL}/api/users/${user.id}/favorites/${recipeId}`, { method: "DELETE" })
-        setFavorites((prev) => prev.filter((id) => id !== recipeId))
-      } else {
-        await fetch(`${API_URL}/api/users/${user.id}/favorites`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ recipeId }),
-        })
-        setFavorites((prev) => [...prev, recipeId])
-      }
-    } catch (e) {
-      console.error(e)
-    }
-  }
-
-  const handleDeleteRecipe = (recipeId: string) => {
-    // Eliminar de la lista de todas las recetas
-    setAllRecipes((prev) => prev.filter((r) => r.id !== recipeId))
-    // Eliminar de mis recetas
-    setMyRecipesIds((prev) => prev.filter((id) => id !== recipeId))
-    // Eliminar de favoritos si estaba
-    setFavorites((prev) => prev.filter((id) => id !== recipeId))
-    setStatusMsg("Receta eliminada correctamente")
-    setStatusMsgType("success")
-    setTimeout(() => setStatusMsg(""), 2000)
-  }
-
-  const handleCreateRecipe = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user) return
-    if (!title.trim()) return
-    setCreating(true)
-    try {
-      const res = await fetch(`${API_URL}/api/recipes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          description: description || undefined,
-          category: category || undefined,
-          imageUrl: imageUrl || undefined,
-          author: user.name,
-          authorAvatar: undefined,
-          prepTime: prepTime || undefined,
-          cookTime: cookTime || undefined,
-          servings: servings ?? undefined,
-          difficulty: difficulty || undefined,
-          userId: user.id,
-        }),
-      })
-      if (!res.ok) throw new Error("No se pudo crear la receta")
-      const newRecipe: Recipe = await res.json()
-      setAllRecipes((prev) => [newRecipe, ...prev])
-      await fetch(`${API_URL}/api/users/${user.id}/my-recipes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipeId: newRecipe.id }),
-      })
-      setMyRecipesIds((prev) => Array.from(new Set([newRecipe.id, ...prev])))
-      setTitle("")
-      setDescription("")
-      setCategory("")
-      setImageUrl("")
-      setPrepTime("")
-      setCookTime("")
-      setServings(undefined)
-      setDifficulty("")
-      setStatusMsg("Receta creada")
-      setStatusMsgType("success")
-      setTimeout(() => setStatusMsg(""), 2000)
-    } catch (err) {
-      console.error(err)
-      setStatusMsg("Error al crear la receta")
-      setStatusMsgType("error")
-      setTimeout(() => setStatusMsg(""), 2000)
-    } finally {
-      setCreating(false)
-    }
-  }
-
+  // Validación de la imagen para el avatar de usuario
   const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user) return
@@ -307,6 +196,7 @@ export default function AccountPage() {
     setIsCropOpen(true)
   }
 
+  // Función para recortar la imagen con blob
   const getCroppedImageBlob = async (imageSrc: string, cropPixels: Area): Promise<Blob> => {
     const createImage = (url: string): Promise<HTMLImageElement> => {
       return new Promise((resolve, reject) => {
@@ -342,6 +232,7 @@ export default function AccountPage() {
     })
   }
 
+  // Confirmar recorte y subir avatar
   const handleConfirmCrop = async () => {
     if (!user || !cropImageUrl || !croppedAreaPixels) return
 
@@ -369,6 +260,7 @@ export default function AccountPage() {
       const uploadData = (await uploadRes.json()) as { url: string }
       const newAvatarUrl = uploadData.url
 
+      // Guardamos avatar en BD
       const res = await fetch(`${API_URL}/api/users/${user.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -384,6 +276,8 @@ export default function AccountPage() {
       }
 
       const updatedUser = await res.json()
+
+      // Actualizamos contexto global
       updateUser({ name: updatedUser.name, avatarUrl: updatedUser.avatarUrl })
       setAvatarUrl(updatedUser.avatarUrl || "")
       setStatusMsg("Foto de perfil actualizada")
@@ -411,10 +305,12 @@ export default function AccountPage() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
+      {/* Modal del recorte de avatar */}
       <Dialog
         open={isCropOpen}
         onOpenChange={(open) => {
           setIsCropOpen(open)
+          // Si se cierra, revocamos la URL y limpiamos
           if (!open && cropImageUrl) {
             URL.revokeObjectURL(cropImageUrl)
             setCropImageUrl(null)
@@ -428,6 +324,7 @@ export default function AccountPage() {
           <DialogHeader>
             <DialogTitle>Ajusta tu foto de perfil</DialogTitle>
           </DialogHeader>
+          {/* Contenedor del cropper */}
           <div className="relative w-full h-64 bg-black/80 rounded-md overflow-hidden">
             {cropImageUrl && (
               <Cropper
@@ -441,6 +338,7 @@ export default function AccountPage() {
               />
             )}
           </div>
+          {/* Slider de zoom + botón de guardar */}
           <div className="flex items-center gap-3 mt-4">
             <input
               type="range"
@@ -464,8 +362,10 @@ export default function AccountPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Contenido principal */}
       <main className="container px-4 sm:px-8 md:px-12 max-w-none mx-auto w-full py-8 space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Card con los datos de perfil */}
           <Card className="lg:col-span-2">
             <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <CardTitle>Mi cuenta</CardTitle>
@@ -532,6 +432,7 @@ export default function AccountPage() {
             </CardContent>
           </Card>
 
+          {/* Card de canbui de contraseña */}
           <Card>
             <CardHeader>
               <CardTitle>Cambiar contraseña</CardTitle>
@@ -583,82 +484,6 @@ export default function AccountPage() {
             </CardContent>
           </Card>
         </div>
-
-        {/* <Card>
-          <CardHeader>
-            <CardTitle>Nueva receta</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleCreateRecipe} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="title">Título</Label>
-                <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
-              </div>
-              <div>
-                <Label htmlFor="category">Categoría</Label>
-                <select
-                  id="category"
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                >
-                  <option value="">-- Selecciona --</option>
-                  <option value="Italiana">Italiana</option>
-                  <option value="Española">Española</option>
-                  <option value="Mexicana">Mexicana</option>
-                  <option value="Japonesa">Japonesa</option>
-                  <option value="China">China</option>
-                  <option value="Vietnamita">Vietnamita</option>
-                  <option value="Coreana">Coreana</option>
-                  <option value="Hindú">Hindú</option>
-                  <option value="Americana">Americana</option>
-                  <option value="Griega">Griega</option>
-                  <option value="Vegana">Vegana</option>
-                  <option value="Hawaiana">Hawaiana</option>
-                  <option value="Latina">Latina</option>
-                </select>
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="description">Descripción</Label>
-                <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
-              </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="imageUrl">Imagen (URL)</Label>
-                <Input id="imageUrl" type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
-              </div>
-              <div>
-                <Label htmlFor="prepTime">Tiempo de preparación</Label>
-                <Input id="prepTime" value={prepTime} onChange={(e) => setPrepTime(e.target.value)} />
-              </div>
-              <div>
-                <Label htmlFor="cookTime">Tiempo de cocción</Label>
-                <Input id="cookTime" value={cookTime} onChange={(e) => setCookTime(e.target.value)} />
-              </div>
-              <div>
-                <Label htmlFor="servings">Raciones</Label>
-                <Input id="servings" type="number" min={1} value={servings ?? ""} onChange={(e) => setServings(e.target.value ? Number(e.target.value) : undefined)} />
-              </div>
-              <div>
-                <Label htmlFor="difficulty">Dificultad</Label>
-                <select
-                  id="difficulty"
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                  value={difficulty}
-                  onChange={(e) => setDifficulty(e.target.value)}
-                >
-                  <option value="">-- Selecciona --</option>
-                  <option value="facil">Fácil</option>
-                  <option value="media">Media</option>
-                  <option value="dificil">Difícil</option>
-                </select>
-              </div>
-              <div className="md:col-span-2 flex items-center gap-3">
-                <Button type="submit" disabled={creating}>Crear receta</Button>
-                {statusMsg && <span className="text-sm text-muted-foreground">{statusMsg}</span>}
-              </div>
-            </form>
-          </CardContent>
-        </Card> */}
       </main>
     </div>
   )

@@ -1,3 +1,5 @@
+// Página de mis recetas: muestra las recetas que el usuario ha creado
+
 import { useEffect, useState } from "react"
 import { Navbar } from "@/components/navbar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -7,14 +9,18 @@ import { MyRecipeCard } from "@/components/my-recipe-card"
 import { API_URL } from "@/lib/api"
 
 export default function MyRecipesPage() {
+  // Comprobamos que el usuario está logeado
   const { user } = useAuth()
+  // traemos las recetas, favoritos y mensajes de estado
   const [myRecipesIds, setMyRecipesIds] = useState<string[]>([])
   const [favorites, setFavorites] = useState<string[]>([])
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([])
   const [statusMsg, setStatusMsg] = useState<string>("")
   const [statusMsgType, setStatusMsgType] = useState<"success" | "error">("success")
+  // Estado de carga
   const [loading, setLoading] = useState(true)
 
+  // Cargar recetas y favoritos del usuario cuando entra en la página
   useEffect(() => {
     if (!user) {
       setLoading(false)
@@ -23,16 +29,19 @@ export default function MyRecipesPage() {
 
     const load = async () => {
       try {
+        // Obtener todas las recetas
         const recRes = await fetch(`${API_URL}/api/recipes`)
         if (!recRes.ok) throw new Error("Error al cargar recetas")
         const recData: Recipe[] = await recRes.json()
         setAllRecipes(recData)
 
+        // Obtener solo las creadas por el usuario
         const mineRes = await fetch(`${API_URL}/api/users/${user.id}/recipes`)
         if (!mineRes.ok) throw new Error("Error al cargar mis recetas")
         const mineData: Recipe[] = await mineRes.json()
         setMyRecipesIds(mineData.map((m) => m.id))
 
+        // Obtener los favs del usuario
         const favRes = await fetch(`${API_URL}/api/users/${user.id}/favorites`)
         if (!favRes.ok) throw new Error("Error al cargar favoritos")
         const favData: { userId: string; recipeId: string }[] = await favRes.json()
@@ -49,14 +58,18 @@ export default function MyRecipesPage() {
     load()
   }, [user])
 
+  // Filtrar las recetas para quedarnos solo con las del usuario
   const myRecipes = allRecipes.filter((r) => myRecipesIds.includes(r.id))
-
+  
+  // Marcar/desmarcar como favorita una receta
   const toggleFavorite = async (recipeId: string) => {
     if (!user) return
     try {
+      // Si ya está en favs, eliminarla
       if (favorites.includes(recipeId)) {
         await fetch(`${API_URL}/api/users/${user.id}/favorites/${recipeId}`, { method: "DELETE" })
         setFavorites((prev) => prev.filter((id) => id !== recipeId))
+      // Si no está en favs, añadirla
       } else {
         await fetch(`${API_URL}/api/users/${user.id}/favorites`, {
           method: "POST",
@@ -70,10 +83,13 @@ export default function MyRecipesPage() {
     }
   }
 
+  // Cuando se elimina una receta, actualizar estado
   const handleDeleteRecipe = (recipeId: string) => {
+    // Quitarla de todas las listas donde aparezca
     setAllRecipes((prev) => prev.filter((r) => r.id !== recipeId))
     setMyRecipesIds((prev) => prev.filter((id) => id !== recipeId))
     setFavorites((prev) => prev.filter((id) => id !== recipeId))
+    // Mensaje de éxito
     setStatusMsg("Receta eliminada correctamente")
     setStatusMsgType("success")
     setTimeout(() => setStatusMsg(""), 2000)
@@ -102,6 +118,7 @@ export default function MyRecipesPage() {
       <Navbar />
 
       <main className="container px-4 sm:px-8 md:px-12 max-w-none mx-auto w-full py-8 space-y-6">
+        {/* Título y mensaje de estado */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Mis recetas</h1>
@@ -124,6 +141,7 @@ export default function MyRecipesPage() {
               Cargando tus recetas...
             </CardContent>
           </Card>
+        // Si tiene recetas propias las muestra, sino muestra un mensaje
         ) : myRecipes.length > 0 ? (
           <div className="grid [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))] gap-6">
             {myRecipes.map((recipe) => (

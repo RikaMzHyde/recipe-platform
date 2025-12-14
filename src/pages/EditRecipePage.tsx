@@ -1,3 +1,5 @@
+// Página para editar una receta existente
+
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { Navbar } from "@/components/navbar"
@@ -9,12 +11,19 @@ import { useToast } from "@/hooks/use-toast"
 import { API_URL } from "@/lib/api"
 
 export default function EditRecipePage() {
+  // Hook para redirigir al usuario entre rutas
   const navigate = useNavigate()
+  // ID de la receta a editar
   const { id } = useParams<{ id: string }>()
+  // Estado para controlar si se está enviando el formulario
   const [isSubmitting, setIsSubmitting] = useState(false)
+  // Estado para almacenar los datos de la receta
   const [recipe, setRecipe] = useState<Recipe | null>(null)
+  // Estado para mostrar mensaje de carga
   const [loading, setLoading] = useState(true)
+  // Estado para manejar errores
   const [error, setError] = useState<string | null>(null)
+  // Toast y auth
   const { toast } = useToast()
   const { user } = useAuth()
 
@@ -26,12 +35,15 @@ export default function EditRecipePage() {
     })
   }
 
+  // Cargar receta cuando se tenga el ID y el usuario esté autenticado
   useEffect(() => {
+    // Si no hay user autenticado, redirigir al inicio
     if (!user) {
       navigate("/")
       return
     }
 
+    // Función para cargar la receta
     const loadRecipe = async () => {
       try {
         const response = await fetch(`${API_URL}/api/recipes/${id}`)
@@ -43,12 +55,13 @@ export default function EditRecipePage() {
           showError("No tienes permiso para editar esta receta")
           return
         }
-        
+        // Guardar la receta en el estado
         setRecipe(data)
       } catch (err) {
         const message = err instanceof Error ? err.message : "Error al cargar la receta"
         showError(message)
       } finally {
+        // Quitamos el estado de carga
         setLoading(false)
       }
     }
@@ -56,6 +69,7 @@ export default function EditRecipePage() {
     loadRecipe()
   }, [id, user, navigate])
 
+  // Acción al completar la edición correctamente
   const handleSuccess = () => {
     navigate(`/recipe/${id}`)
   }
@@ -94,6 +108,7 @@ export default function EditRecipePage() {
     )
   }
 
+  // Formulario de edición
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

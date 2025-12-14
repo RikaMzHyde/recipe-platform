@@ -1,3 +1,5 @@
+// Página principal de la web: el usuario puede acceder a su cuenta y buscar recetas.
+
 import { useState, useEffect } from "react"
 import { useSearchParams } from "react-router-dom"
 import { Navbar } from "@/components/navbar"
@@ -9,21 +11,30 @@ import { useAuth } from "@/contexts/auth-context"
 import { API_URL } from "@/lib/api"
 
 export default function HomePage() {
+  // Leer parámetros de la URL
   const [searchParams] = useSearchParams()
+  // Lista de recetas filtradas
   const [recipes, setRecipes] = useState<Recipe[]>([])
+  // Lista completa de recetas (antes de aplicar filtros)
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([])
+  // IDs de recetas marcadas como favoritas por el usuario
   const [favorites, setFavorites] = useState<string[]>([])
+  // Estado de carga para mostrar "Cargando recetas..."
   const [loading, setLoading] = useState(true)
+  // Categoría inicial tomada desde los parámetros de la URL
   const [initialCategory, setInitialCategory] = useState<string>('')
+  // Lista de categorías disponibles
   const [categories, setCategories] = useState<Category[]>([])
+  // Usuario autenticado
   const { user } = useAuth()
 
+  // Efecto para cargar recetas, categorías y favs
   useEffect(() => {
-    // Leer parámetro de categoría desde la URL
+    // Capturar categoría desde la URL (si existe)
     const categoryParam = searchParams.get('category')
     if (categoryParam) {
       setInitialCategory(categoryParam)
-      // Hacer scroll a la sección de resultados después de un breve delay
+      // Hacer scroll automático a la sección de resultados
       setTimeout(() => {
         const resultsSection = document.getElementById('results-section')
         if (resultsSection) {
@@ -32,17 +43,18 @@ export default function HomePage() {
       }, 300)
     }
     
-    // Cargar recetas y categorías desde el backend
+    // Cargar recetas y categorías
     loadRecipes()
     loadCategories()
     
-    // Cargar favoritos del usuario desde el backend
+    // Cargar favoritos del usuario
     if (user) {
       ;(async () => {
         try {
           const favRes = await fetch(`${API_URL}/api/users/${user.id}/favorites`)
           if (favRes.ok) {
             const favData: { userId: string; recipeId: string }[] = await favRes.json()
+            // Extraemos IDs de receta
             setFavorites(favData.map((f) => f.recipeId))
           }
         } catch (e) {
@@ -50,22 +62,25 @@ export default function HomePage() {
         }
       })()
     } else {
+      // Si no hay usuario, limpiamos favoritos
       setFavorites([])
     }
   }, [searchParams, user])
 
+  // Función para cargar recetas y aplicar filtros
   const loadRecipes = async () => {
     setLoading(true)
     try {
       const data = await fetchRecipes()
       setAllRecipes(data)
       
-      // Aplicar filtro de categoría si existe en la URL
+      // Aplicar filtro de categoría si existe
       const categoryParam = searchParams.get('category')
       if (categoryParam) {
         const filtered = data.filter((recipe) => recipe.categoryName === categoryParam)
         setRecipes(filtered)
       } else {
+        // Si no, mostramos todas
         setRecipes(data)
       }
     } catch (error) {
@@ -75,6 +90,7 @@ export default function HomePage() {
     }
   }
 
+  // Cargar categorías
   const loadCategories = async () => {
     try {
       const data = await fetchCategories()
@@ -84,10 +100,11 @@ export default function HomePage() {
     }
   }
 
+  // Función de búsqueda y filtros
   const handleSearch = (query: string, category: string, ingredient: string, difficulty: string) => {
     let filtered = [...allRecipes]
 
-    // Filtrar por query (título o descripción)
+    // Filtrar por texto (título o descripción)
     if (query) {
       filtered = filtered.filter(
         (recipe) =>
@@ -118,6 +135,7 @@ export default function HomePage() {
     setRecipes(filtered)
   }
 
+  // Agregar o quitar receta de favs
   const handleFavoriteToggle = async (recipeId: string) => {
     if (!user) {
       alert("Debes iniciar sesión para guardar favoritos")
@@ -126,11 +144,11 @@ export default function HomePage() {
 
     try {
       if (favorites.includes(recipeId)) {
-        // Eliminar de favoritos
+        // Si ya estaba en favs, eliminar
         await fetch(`${API_URL}/api/users/${user.id}/favorites/${recipeId}`, { method: "DELETE" })
         setFavorites((prev) => prev.filter((id) => id !== recipeId))
       } else {
-        // Agregar a favoritos
+        // Si no, añadir
         await fetch(`${API_URL}/api/users/${user.id}/favorites`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -143,17 +161,20 @@ export default function HomePage() {
     }
   }
 
+  // Recetas destacadas para carousel
   const featuredRecipes = allRecipes.slice(0, 5)
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
+      {/* Carrusel de recetas destacadas */}
       <main className="container px-3 sm:px-4 md:px-6 lg:px-10 max-w-none mx-auto w-full py-6 sm:py-8 space-y-8 sm:space-y-12">
         <section className="px-4 sm:px-8 md:px-12">
           <RecipeCarousel recipes={featuredRecipes} />
         </section>
 
+        {/* Buscador + Filtros */}
         <section className="px-4 sm:px-8 md:px-12">
           <div className="mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-balance">Descubre Recetas Deliciosas</h2>
@@ -164,6 +185,7 @@ export default function HomePage() {
           <RecipeSearch onSearch={handleSearch} initialCategory={initialCategory} categories={categories} />
         </section>
 
+        {/* Resultados */}
         <section id="results-section" className="px-4 sm:px-8 md:px-12">
           <h2 className="text-2xl font-bold mb-6">
             {recipes.length === allRecipes.length ? "Todas las Recetas" : `${recipes.length} Recetas Encontradas`}
@@ -173,6 +195,7 @@ export default function HomePage() {
               <p className="text-lg text-muted-foreground">Cargando recetas...</p>
             </div>
           )}
+          {/* Lista de recetas */}
           {recipes.length > 0 ? (
             <div className="grid [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))] gap-6">
               {recipes.map((recipe) => (
@@ -185,6 +208,7 @@ export default function HomePage() {
               ))}
             </div>
           ) : (
+            // Si no hay resultados respués de buscar...
             <div className="text-center py-12">
               <p className="text-lg text-muted-foreground">
                 No se encontraron recetas. Intenta con otros términos de búsqueda.

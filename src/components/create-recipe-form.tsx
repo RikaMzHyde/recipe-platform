@@ -6,9 +6,11 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, X, Upload, ImageIcon } from "lucide-react"
+// Funciones del backend y Tipos
 import { createRecipeWithImage, fetchCategories, type Category, type Ingredient } from "@/lib/recipes"
 import { useToast } from "@/hooks/use-toast"
 
+// Props que recibe este formulario
 interface CreateRecipeFormProps {
   userId: string
   onSuccess: () => void
@@ -16,15 +18,20 @@ interface CreateRecipeFormProps {
   setIsSubmitting: (value: boolean) => void
 }
 
+// Componente principal
 export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitting }: CreateRecipeFormProps) {
+  // Estado para la lista de categorías desde el backend
   const [categories, setCategories] = useState<Category[]>([])
+  // Imagen seleccionada + preview
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+ // Ingredientes (array de objetos)
   const [ingredients, setIngredients] = useState<Ingredient[]>([{ name: "", amount: "" }])
   const [error, setError] = useState<string | null>(null)
 
   const { toast } = useToast()
 
+  // Función para mostrar erorres
   const showError = (message: string) => {
     setError(message)
     toast({
@@ -33,7 +40,7 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
     })
   }
 
-  // Form fields
+  // Campos del formulario
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [categoryId, setCategoryId] = useState<string>("")
@@ -43,15 +50,18 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
   const [difficulty, setDifficulty] = useState<string>("")
   const [preparation, setPreparation] = useState("")
 
+  // Cargar categorías al iniciar
   useEffect(() => {
     loadCategories()
   }, [])
 
+  // Llamada al back
   const loadCategories = async () => {
     const cats = await fetchCategories()
     setCategories(cats)
   }
 
+  // Manejo del archivo de imagen
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -79,22 +89,26 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
     }
   }
 
+  // Agregar un campo de ingrediente
   const addIngredient = () => {
     setIngredients([...ingredients, { name: "", amount: "" }])
   }
 
+  // Eliminar ingrediente por índice
   const removeIngredient = (index: number) => {
     if (ingredients.length > 1) {
       setIngredients(ingredients.filter((_, i) => i !== index))
     }
   }
 
+  // Actualizar un ingrediente (nombre o cantidad)
   const updateIngredient = (index: number, field: "name" | "amount", value: string) => {
     const newIngredients = [...ingredients]
     newIngredients[index][field] = value
     setIngredients(newIngredients)
   }
 
+  // Enviar form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -112,12 +126,13 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
         throw new Error("La dificultad es obligatoria")
       }
 
+      // FormData para enviar datos + imagen al backend
       const formData = new FormData()
 
       // Agregar userId (obligatorio)
       formData.append("userId", userId)
 
-      // Agregar campos básicos
+      // Campos básicos
       formData.append("title", title.trim())
       if (description.trim()) formData.append("description", description.trim())
       if (categoryId) formData.append("categoryId", categoryId)
@@ -132,7 +147,7 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
         formData.append("ingredients", JSON.stringify(validIngredients))
       }
 
-      // Agregar preparación
+      // Preparación
       if (preparation.trim()) formData.append("preparation", preparation.trim())
 
       // Agregar imagen si existe
@@ -153,6 +168,7 @@ export function CreateRecipeForm({ userId, onSuccess, isSubmitting, setIsSubmitt
     }
   }
 
+  // Render del formulario
   return (
     <Card>
       <CardHeader>

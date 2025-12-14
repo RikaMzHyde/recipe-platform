@@ -1,9 +1,13 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+// React Router: creación del router y proveedor
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
+// Estilos globales de la app
 import '@/pages/globals.css'
+// Layout común que envuelve todas las páginas
 import { Layout } from '@/components/layout'
+// Contextos globales
 import { ThemeProvider } from '@/contexts/theme-context'
 import { AuthProvider } from '@/contexts/auth-context'
 
@@ -28,6 +32,7 @@ const router = createBrowserRouter([
   { path: '/create-recipe', element: <Layout><CreateRecipePage /></Layout> },
 ])
 
+// Punto de entrada de la aplicación
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     {/* Proveedor de tema (modo claro/oscuro) */}

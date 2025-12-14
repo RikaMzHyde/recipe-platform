@@ -1,8 +1,10 @@
+// Interfaz que define un ingrediente de una receta
 export interface Ingredient {
   name: string
   amount: string
 }
 
+// Interfaz principal que define la estructura completa de una receta
 export interface Recipe {
   id: string
   title: string
@@ -22,14 +24,16 @@ export interface Recipe {
   userAvatar: string | null
 }
 
+// Interfaz que representa una categoría de recetas
 export interface Category {
   id: number
   name: string
 }
 
+// Importamos la URL base del backend
 import { API_URL } from "@/lib/api"
 
-// API Functions
+// Obtiene todas las recetas
 export async function fetchRecipes(): Promise<Recipe[]> {
   try {
     const response = await fetch(`${API_URL}/api/recipes`)
@@ -41,6 +45,7 @@ export async function fetchRecipes(): Promise<Recipe[]> {
   }
 }
 
+// Obtiene todas las categorías
 export async function fetchCategories(): Promise<Category[]> {
   try {
     const response = await fetch(`${API_URL}/api/categories`)
@@ -52,6 +57,7 @@ export async function fetchCategories(): Promise<Category[]> {
   }
 }
 
+// Crea una receta enviando datos e imagen
 export async function createRecipeWithImage(formData: FormData): Promise<Recipe> {
   const response = await fetch(`${API_URL}/api/recipes/with-image`, {
     method: 'POST',
@@ -63,6 +69,7 @@ export async function createRecipeWithImage(formData: FormData): Promise<Recipe>
     throw new Error(error.error || 'Error al crear la receta')
   }
   
+  // Devolvemos la receta creada
   return await response.json()
 }
 

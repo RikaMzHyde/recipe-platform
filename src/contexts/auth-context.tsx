@@ -1,8 +1,10 @@
+// Sistema global de auth (quién es el user autenticado, cómo iniciar y cerrar sesión, cómo actualizar fatos user y compartir ese estado con toda la app mediante contexto de React)
+// Esto permite que cualquier componente pueda acceder al usuario actual llamando a useAuth
 import React, { createContext, useContext, useState } from "react"
 
 import { getUser as getStoredUser, setUser as setStoredUser, logout as clearStoredUser, type User } from "@/lib/auth"
 
-// Tipo de datos que expondrá el contexto de autenticación a toda la app
+// Tipo de datos que compartirá el auth con toda la aplicación
 interface AuthContextType {
   user: User | null
   login: (user: User) => void
@@ -13,9 +15,9 @@ interface AuthContextType {
 // Creamos el contexto. El valor inicial es undefined para detectar usos fuera del proveedor.
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Componente proveedor que envuelve la aplicación y gestiona el estado global de usuario
+// Gestiona estado global de autenticación y lo expone al resto de componentes
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Al montar, intentamos leer el usuario persistido (si hay sesión guardada en localStorage)
+  // Cargamos el usuario guardado en localStorage al iniciar la app (si existe), así mantenemos la sesion al recargar
   const [user, setUser] = useState<User | null>(() => getStoredUser())
 
   // Inicia sesión guardando el usuario tanto en localStorage como en el estado de React
@@ -40,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
-  // Inyectamos el valor del contexto para que cualquier componente hijo pueda usar useAuth()
+  // Hacemos disponible el contexto a toda la app
   return <AuthContext.Provider value={{ user, login, logout, updateUser }}>{children}</AuthContext.Provider>
 }
 

@@ -7,8 +7,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+// Contexto global donde está guardada la sesión del usuario
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
+// Utilidades para cargar preguntas de seguridad
 import { fetchSecurityQuestions, getRandomSecurityQuestion, type SecurityQuestion } from "@/lib/security-questions"
 import { API_URL } from "@/lib/api"
 
@@ -18,6 +21,7 @@ interface AuthDialogProps {
   onSuccess: () => void
 }
 
+// Estados para login, registro 
 export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
   const [loginEmail, setLoginEmail] = useState("")
   const [loginPassword, setLoginPassword] = useState("")
@@ -32,7 +36,6 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true)
   const [error, setError] = useState("")
 
-  // Mostrar/ocultar sección de recuperación dentro de login
   const [showResetSection, setShowResetSection] = useState(false)
   
   // Estados para recuperación de contraseña
@@ -55,6 +58,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
         const questions = await fetchSecurityQuestions()
         console.log('Preguntas cargadas:', questions.length)
         setSecurityQuestions(questions)
+        // Seleccionamos una aleatoria
         if (questions.length > 0) {
           const randomQuestion = getRandomSecurityQuestion(questions)
           setRegisterSecurityQuestionId(randomQuestion.id)
@@ -71,6 +75,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
     loadQuestions()
   }, [])
 
+  // Helper para errores + toast
   const showError = (message: string) => {
     setError(message)
     toast({
@@ -79,6 +84,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
     })
   }
 
+  // Login
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -95,7 +101,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
         return
       }
       const user = await res.json()
-      // Guardamos el usuario en el contexto global de autenticación
+      // Guardamos el usuario en el contexto global de autenticación, avisamos del éxito, cerramos modal y limpiamos
       login(user)
       onSuccess()
       onOpenChange(false)
@@ -106,17 +112,17 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
     }
   }
 
+  // Registro
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     
-    // Validar que las contraseñas coincidan
+    // Validar básicas
     if (registerPassword !== registerConfirmPassword) {
       showError("Las contraseñas no coinciden")
       return
     }
     
-    // Validar longitud mínima de contraseña
     if (registerPassword.length < 6) {
       showError("La contraseña debe tener al menos 6 caracteres")
       return
@@ -145,10 +151,11 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
         return
       }
       const user = await res.json()
-      // Guardamos el usuario en el contexto global de autenticación
+      // Guardamos el usuario y avisamos del éxito, cerramos modal y limpiamos
       login(user)
       onSuccess()
       onOpenChange(false)
+      // Reseteamos form
       setRegisterName("")
       setRegisterEmail("")
       setRegisterPassword("")
@@ -165,7 +172,9 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
     }
   }
 
-  // Funciones para recuperación de contraseña
+  // Funciones para recuperación de contraseña 
+
+  // Validar email
   const handleResetEmail = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -179,6 +188,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
       }
       
       const data = await res.json()
+      // Mostramos la pregunta que corresponde a ese email
       setResetSecurityQuestion(data.question)
       setResetStep("question")
     } catch (e) {
@@ -190,6 +200,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
     e.preventDefault()
     setError("")
 
+    // Validaciones
     if (resetNewPassword !== resetConfirmPassword) {
       showError("Las contraseñas no coinciden")
       return
@@ -201,7 +212,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
     }
 
     try {
-      // 1) Cambiar contraseña
+      // Cambiar contraseña
       const res = await fetch(`${API_URL}/api/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -218,7 +229,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
         return
       }
 
-      // 2) Auto-login con la nueva contraseña
+      // Auto-login con la nueva contraseña
       const loginRes = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -259,11 +270,13 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
             Inicia sesión o regístrate para compartir tus recetas
           </DialogDescription>
         </DialogHeader>
+        {/* Tabs para login, registro y recuperación */}
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
             <TabsTrigger value="register">Registrarse</TabsTrigger>
           </TabsList>
+          {/* --- Tab de login --- */}
           <TabsContent value="login">
             <div className="space-y-4">
               {!showResetSection ? (
@@ -325,6 +338,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
               )}
             </div>
           </TabsContent>
+          {/* --- Tab de registro --- */}
           <TabsContent value="register">
             <RegisterTab
               registerName={registerName}
@@ -355,6 +369,7 @@ export function AuthDialog({ open, onOpenChange, onSuccess }: AuthDialogProps) {
   )
 }
 
+// Props que recibe el componente LoginTab
 interface LoginTabProps {
   loginEmail: string
   loginPassword: string
@@ -373,6 +388,7 @@ function LoginTab({
   onLoginPasswordChange,
 }: LoginTabProps) {
   return (
+    // Formulario de inicio de sesión
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="login-email">Email</Label>
@@ -404,6 +420,7 @@ function LoginTab({
   )
 }
 
+// Props que recibe el componente RegisterTab
 interface RegisterTabProps {
   registerName: string
   registerEmail: string
@@ -416,11 +433,13 @@ interface RegisterTabProps {
   securityQuestions: SecurityQuestion[]
   error: string
   onSubmit: (e: React.FormEvent) => void
+  // Setters de cada campo del formulario
   onRegisterNameChange: (value: string) => void
   onRegisterEmailChange: (value: string) => void
   onRegisterPasswordChange: (value: string) => void
   onRegisterConfirmPasswordChange: (value: string) => void
   onRegisterSecurityAnswerChange: (value: string) => void
+  // Seleccionar pregunta de seguridad
   onRegisterSecurityQuestionChange: (id: number, question: string) => void
 }
 
@@ -543,6 +562,7 @@ function RegisterTab({
   )
 }
 
+// Props que recibe el componente ResetPasswordTab
 interface ResetPasswordTabProps {
   resetStep: "email" | "question"
   resetEmail: string
@@ -551,10 +571,12 @@ interface ResetPasswordTabProps {
   resetNewPassword: string
   resetConfirmPassword: string
   error: string
+  // Callbacks para cada acción del flujo
   onSubmitEmail: (e: React.FormEvent) => void
   onSubmitAnswer: (e: React.FormEvent) => void
   onCancelFromEmail: () => void
   onCancelFromQuestion: () => void
+  // Setters de cada campo del formulario
   onResetEmailChange: (value: string) => void
   onResetSecurityAnswerChange: (value: string) => void
   onResetNewPasswordChange: (value: string) => void

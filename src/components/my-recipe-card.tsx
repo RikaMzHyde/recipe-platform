@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
+// Props que recibe este componente
 interface MyRecipeCardProps {
   recipe: Recipe
   onDelete: (recipeId: string) => void
@@ -26,16 +27,19 @@ interface MyRecipeCardProps {
   isFavorite?: boolean
 }
 
+// Componente principal
 export function MyRecipeCard({ recipe, onDelete, onFavoriteToggle, isFavorite = false }: MyRecipeCardProps) {
   const navigate = useNavigate()
   const [favorite, setFavorite] = useState(isFavorite)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  // Si la prop isFavorite cambia, actualizamos el estado local
   useEffect(() => {
     setFavorite(isFavorite)
   }, [isFavorite])
 
+  // Manejo del click en el corazón
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -43,18 +47,20 @@ export function MyRecipeCard({ recipe, onDelete, onFavoriteToggle, isFavorite = 
     onFavoriteToggle?.(recipe.id)
   }
 
+  // Manejo del click en el corazón
   const handleEdit = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     navigate(`/recipe/${recipe.id}/edit`)
   }
-
+  // Abrir diálogo para confirmar eliminación
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setShowDeleteDialog(true)
   }
 
+  // Confirmar eliminación y eliminar
   const handleConfirmDelete = async () => {
     setIsDeleting(true)
     try {
@@ -77,14 +83,17 @@ export function MyRecipeCard({ recipe, onDelete, onFavoriteToggle, isFavorite = 
 
   return (
     <>
+    {/* Envolvemos todo en un Link para ir al detalle */}
       <Link to={`/recipe/${recipe.id}`}>
         <Card className="group overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1 h-full">
+          {/* Imagen de la receta */}
           <div className="relative h-48 overflow-hidden">
             <img
               src={recipe.imageUrl || "/placeholder.svg"}
               alt={recipe.title}
               className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-110"
             />
+            {/* Botón de corazón */}
             <div className="absolute top-2 right-2 flex gap-2">
               <Button
                 variant="ghost"
@@ -97,10 +106,12 @@ export function MyRecipeCard({ recipe, onDelete, onFavoriteToggle, isFavorite = 
                 <Heart className={`h-5 w-5 ${favorite ? "fill-current" : ""}`} />
               </Button>
             </div>
+            {/* Badge de categoría */}
             {recipe.categoryName && (
               <Badge className="absolute top-2 left-2 bg-primary/90 backdrop-blur-sm">{recipe.categoryName}</Badge>
             )}
           </div>
+          {/* Contenido: título, descripción, datos */}
           <CardContent className="p-4">
             <h3 className="text-lg sm:text-xl font-bold mb-2 line-clamp-1 text-balance">{recipe.title}</h3>
             <p className="text-sm text-muted-foreground mb-3 line-clamp-2 text-pretty">
@@ -126,6 +137,7 @@ export function MyRecipeCard({ recipe, onDelete, onFavoriteToggle, isFavorite = 
               )}
             </div>
           </CardContent>
+          {/* Botones de editar y borrar */}
           <CardFooter className="p-4 pt-0 flex gap-2">
             <Button
               variant="outline"
@@ -149,6 +161,7 @@ export function MyRecipeCard({ recipe, onDelete, onFavoriteToggle, isFavorite = 
         </Card>
       </Link>
 
+      {/* DIÁLOGO DE CONFIRMACIÓN PARA BORRAR */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>

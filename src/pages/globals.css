@@ -145,7 +145,7 @@
   }
 }
 
-/* Cursor pointer for all clickable elements */
+/* Cursor pointer */
 @layer utilities {
   .kokumi-logo-text {
     font-family: "Baloo 2", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;

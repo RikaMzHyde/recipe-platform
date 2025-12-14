@@ -1,3 +1,5 @@
+// Página de favoritos del usuario
+
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Navbar } from "@/components/navbar"
@@ -9,11 +11,16 @@ import { useAuth } from "@/contexts/auth-context"
 import { API_URL } from "@/lib/api"
 
 export default function FavoritesPage() {
+  // Hook para redirigir al usuario entre rutas
   const navigate = useNavigate()
+  // User autenticado
   const { user } = useAuth()
+  // IDs de recetas favoritas del usuario
   const [favorites, setFavorites] = useState<string[]>([])
+  // Lista de recetas marcadas como favoritas
   const [favoriteRecipes, setFavoriteRecipes] = useState<Recipe[]>([])
 
+  // Cargar favoritos al montar la página
   useEffect(() => {
     if (!user) {
       navigate("/")
@@ -22,17 +29,20 @@ export default function FavoritesPage() {
 
     ;(async () => {
       try {
-        // 1) Obtener IDs de favoritos del usuario
+        // Obtener IDs de favoritos del usuario
         const favRes = await fetch(`${API_URL}/api/users/${user.id}/favorites`)
         if (!favRes.ok) throw new Error("Error al cargar favoritos")
+        // Lista de relacion userId - recipeId
         const favData: { userId: string; recipeId: string }[] = await favRes.json()
+        // Extraer solo los ids de receta
         const favoriteIds = favData.map((f) => f.recipeId)
         setFavorites(favoriteIds)
 
-        // 2) Cargar recetas y filtrar por IDs
+        // Cargar tods las recetas y filtrar por IDs
         const recRes = await fetch(`${API_URL}/api/recipes`)
         if (!recRes.ok) throw new Error("Error al cargar recetas")
         const allRecipes: Recipe[] = await recRes.json()
+        // Filtrar solo las recetas marcadas como favoritas
         setFavoriteRecipes(allRecipes.filter((r) => favoriteIds.includes(r.id)))
       } catch (e) {
         console.error(e)
@@ -40,12 +50,15 @@ export default function FavoritesPage() {
     })()
   }, [navigate, user])
 
+  // Quitar receta de favs
   const handleFavoriteToggle = async (recipeId: string) => {
     if (!user) return
     try {
       await fetch(`${API_URL}/api/users/${user.id}/favorites/${recipeId}`, { method: "DELETE" })
+      // Actualizar estados localmente
       const newFavorites = favorites.filter((id) => id !== recipeId)
       setFavorites(newFavorites)
+      // Quitar receta de la vista
       setFavoriteRecipes((prev) => prev.filter((r) => r.id !== recipeId))
     } catch (e) {
       console.error(e)
@@ -77,6 +90,7 @@ export default function FavoritesPage() {
           </div>
         </div>
 
+        {/* Si hay recetas favoritas, mostrarlas */}
         {favoriteRecipes.length > 0 ? (
           <div className="grid [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))] gap-6">
             {favoriteRecipes.map((recipe) => (
@@ -84,6 +98,7 @@ export default function FavoritesPage() {
             ))}
           </div>
         ) : (
+          // Si no hay...
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-muted">
               <Heart className="h-12 w-12 text-muted-foreground" />

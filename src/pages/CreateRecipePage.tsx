@@ -1,3 +1,5 @@
+// Página para crear una nueva receta
+
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Navbar } from "@/components/navbar"
@@ -5,8 +7,11 @@ import { CreateRecipeForm } from "@/components/create-recipe-form"
 import { useAuth } from "@/contexts/auth-context"
 
 export default function CreateRecipePage() {
+  // Hook para redirigir al usuario entre rutas
   const navigate = useNavigate()
+  // Estado para controlar si se está enviando el formulario
   const [isSubmitting, setIsSubmitting] = useState(false)
+  // Contexto de autenticación para obtener el usuario actual
   const { user } = useAuth()
 
   // Redirigir si no está autenticado
@@ -15,6 +20,7 @@ export default function CreateRecipePage() {
     return null
   }
 
+  // Cuando se crea la receta correctamente, se redirige al inicio
   const handleSuccess = () => {
     navigate("/")
   }
@@ -31,6 +37,7 @@ export default function CreateRecipePage() {
           </p>
         </div>
 
+        {/* Formulario para crear una receta */}
         <CreateRecipeForm 
           userId={user.id}
           onSuccess={handleSuccess}

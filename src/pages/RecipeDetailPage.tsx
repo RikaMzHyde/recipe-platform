@@ -1,5 +1,9 @@
+// Página de detalle de receta: muestra la información completa,permite valorarla, marcarla como favorita y gestionar comentarios
+
+// Hooks de React y utilidades de React Router
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
+// Componentes
 import { Navbar } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -18,24 +22,30 @@ import {
 } from "@/components/ui/alert-dialog"
 import { ArrowLeft, Heart, Clock, Users, ChefHat, Flame, Star, Pencil, Trash2 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+// Tipo de receta y variables API
 import { type Recipe } from "@/lib/recipes"
 import { API_URL } from "@/lib/api"
 
+// Componenete de página de detalle de receta
 export default function RecipeDetailPage() {
+  // Obtener parámetros de la URL
   const params = useParams()
   const navigate = useNavigate()
   const recipeId = params.id as string
-  
+  // Estados de receta, carga y usuario
   const [recipe, setRecipe] = useState<Recipe | null>(null)
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
+  // Estados de favoritos, comentarios y valoraciones
   const [isFavorite, setIsFavorite] = useState(false)
   const [comments, setComments] = useState<Array<{ id: string; content: string; createdAt: string; userId: string; userName: string; userAvatar: string | null }>>([])
   const [commentText, setCommentText] = useState("")
   const [submitting, setSubmitting] = useState(false)
+  // Valoraciones promedio, cantidad y mi valoración
   const [avgRating, setAvgRating] = useState<number>(0)
   const [ratingCount, setRatingCount] = useState<number>(0)
   const [myRating, setMyRating] = useState<number | null>(null)
+  // Estados para borrar comentarios
   const [deleteCommentDialogOpen, setDeleteCommentDialogOpen] = useState(false)
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null)
   const [deletingComment, setDeletingComment] = useState(false)
@@ -46,7 +56,7 @@ export default function RecipeDetailPage() {
       try {
         setLoading(true)
         
-        // Cargar receta
+        // Obtener receta
         const recipeRes = await fetch(`${API_URL}/api/recipes/${recipeId}`)
         if (!recipeRes.ok) {
           setRecipe(null)
@@ -56,20 +66,20 @@ export default function RecipeDetailPage() {
         const recipeData = await recipeRes.json()
         setRecipe(recipeData)
         
-        // cargar comentarios
+        // Obtener comentarios
         const res = await fetch(`${API_URL}/api/recipes/${recipeId}/comments`)
         if (res.ok) {
           const data = await res.json()
           setComments(data)
         }
-        // cargar rating promedio
+        // Obtener rating promedio y conteo
         const rr = await fetch(`${API_URL}/api/recipes/${recipeId}/ratings`)
         if (rr.ok) {
           const d: { average: number; count: number } = await rr.json()
           setAvgRating(d.average)
           setRatingCount(d.count)
         }
-        // cargar rating del usuario y favoritos
+        // Si hay usuario logueado, cargar su rating de esa receta y si es fav
         if (user) {
           const ur = await fetch(`${API_URL}/api/users/${user.id}/ratings/${recipeId}`)
           if (ur.ok) {
@@ -92,6 +102,7 @@ export default function RecipeDetailPage() {
     })()
   }, [recipeId, user])
 
+  // Alternar fav de usuario
   const handleFavoriteToggle = async () => {
     if (!user) {
       alert("Debes iniciar sesión para guardar favoritos")
@@ -117,6 +128,7 @@ export default function RecipeDetailPage() {
     }
   }
 
+  // Crear comentario
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) {
@@ -147,6 +159,7 @@ export default function RecipeDetailPage() {
     }
   }
 
+  // Abrir diálogo para borrar comentario
   const handleDeleteComment = (commentId: string) => {
     if (!user) {
       alert("Debes iniciar sesión para borrar comentarios")
@@ -157,6 +170,7 @@ export default function RecipeDetailPage() {
     setDeleteCommentDialogOpen(true)
   }
 
+  // Confirmar eliminación
   const handleConfirmDeleteComment = async () => {
     if (!user || !commentToDelete) return
 
@@ -170,6 +184,7 @@ export default function RecipeDetailPage() {
         alert("Error al borrar el comentario")
         return
       }
+      // Quitar comentario del estado
       setComments((prev) => prev.filter((c) => c.id !== commentToDelete))
       setDeleteCommentDialogOpen(false)
       setCommentToDelete(null)
@@ -180,6 +195,7 @@ export default function RecipeDetailPage() {
     }
   }
 
+  // Valorar receta
   const handleRate = async (value: number) => {
     if (!user) {
       alert("Debes iniciar sesión para valorar")
@@ -193,6 +209,7 @@ export default function RecipeDetailPage() {
       })
       if (!res.ok) return
       setMyRating(value)
+      // Actualizar rating promedio
       const r = await fetch(`${API_URL}/api/recipes/${recipeId}/ratings`)
       if (r.ok) {
         const d: { average: number; count: number } = await r.json()
@@ -204,6 +221,7 @@ export default function RecipeDetailPage() {
     }
   }
 
+  // Formatear fecha de comentario
   const formatCommentDate = (iso: string) => {
     const d = new Date(iso)
     if (Number.isNaN(d.getTime())) return ""
@@ -243,6 +261,7 @@ export default function RecipeDetailPage() {
     )
   }
 
+  // Clases de colores según dificultad
   const difficultyColors = {
     Fácil: "bg-green-500/10 text-green-700 dark:text-green-400",
     Media: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
@@ -258,7 +277,7 @@ export default function RecipeDetailPage() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Volver
         </Button>
-
+        {/* Grid principal imagen + datos */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           <div className="relative h-[400px] lg:h-[600px] rounded-3xl overflow-hidden">
             <img src={recipe.imageUrl || "/placeholder.svg"} alt={recipe.title} className="absolute inset-0 h-full w-full object-cover" />
@@ -303,6 +322,7 @@ export default function RecipeDetailPage() {
                 </Button>
               </div>
               <p className="text-base sm:text-lg text-muted-foreground text-pretty">{recipe.description}</p>
+              {/* Botón editar si es el usuario que ha creado la receta */}
               {user && recipe.userId === user.id && (
                 <div className="mt-4">
                   <Button
@@ -332,6 +352,7 @@ export default function RecipeDetailPage() {
 
             <Separator />
 
+            {/* Tarjetas de info (tiempo, dificultad, etc) */}
             <div className="grid grid-cols-2 gap-4">
               <Card>
                 <CardContent className="flex items-center gap-3 p-4">
@@ -433,6 +454,7 @@ export default function RecipeDetailPage() {
 
         </div>
 
+        {/* Comentarios */}
         <div className="grid grid-cols-1 gap-8 mt-8">
           <Card>
             <CardContent className="p-6 space-y-4">
@@ -462,6 +484,7 @@ export default function RecipeDetailPage() {
                               {formatCommentDate(c.createdAt)}
                             </span>
                           )}
+                          {/* Botón eliminar si es el usuario que ha creado el comentario */}
                           {user && c.userId === user.id && (
                             <button
                               type="button"
